@@ -24,6 +24,11 @@ void SparseGPR::fit(const Eigen::MatrixXd & X_train, const Eigen::MatrixXd & y_t
     else if (sparse_method == 1) fit_with_fitc();
 }
 
+void SparseGPR::fit(const Eigen::MatrixXd & X_train, const Eigen::MatrixXd & y_train)
+{
+    std::cout << "<!!!! It is sparse GPR, please use fit function with inducing points !!!!>" << std::endl;
+}
+
 void SparseGPR::fit_with_dtc()
 {
     double precision = 1.0 / fmax(1.0, alpha_); // TODO: Change it after test (JBL)

@@ -2,7 +2,7 @@
 #include <fstream>
 #include <Eigen/Core>
 #include <vector>
-#include "gprs/gpr.h"
+#include "gprs/exact_gpr.h"
 
 using namespace GPRcpp;
 
@@ -90,7 +90,7 @@ int main(int argc, char *argv[])
     // GPR fit test
     std::cout << "\n-----GPR fit test-----" << std::endl;
     std::shared_ptr<kernel_base> realkernelPtr = std::make_shared<sum_kernel>(real_kernel);
-    gpr gpr_obj(realkernelPtr);
+    ExactGPR gpr_obj(realkernelPtr);
     std::cout << "gpr kernel:\n" << gpr_obj.kernel_->evaluate(x) << std::endl;
     gpr_obj.fit(x, y);
 
@@ -118,7 +118,7 @@ int main(int argc, char *argv[])
     std::cout << "\n-----GPR normalized fit test-----" << std::endl;
     Eigen::MatrixXd y_multi = Eigen::MatrixXd(3, 2);
     y_multi << 1, 2, 3, 4, 5, 6; // The normalized y_train mean and std are correct with this y_train
-    gpr gpr_normalized(realkernelPtr, true);
+    ExactGPR gpr_normalized(realkernelPtr, true);
     gpr_normalized.fit(x, y);
     auto predict_normalized = gpr_normalized.predict(x, true);
     std::cout << "gpr predict mean:\n" << predict_normalized.y_mean.transpose() << std::endl;
@@ -126,7 +126,7 @@ int main(int argc, char *argv[])
 
     // Change the alpha
     std::cout << "\n-----Change the alpha test-----" << std::endl;
-    gpr gpr_change_alpha(realkernelPtr, true);
+    ExactGPR gpr_change_alpha(realkernelPtr, true);
     gpr_change_alpha.alpha_ = 1e-1;
     gpr_change_alpha.fit(x, y);
     predict_normalized = gpr_change_alpha.predict(x, true);

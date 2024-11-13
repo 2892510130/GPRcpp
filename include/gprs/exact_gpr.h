@@ -4,15 +4,12 @@
 namespace GPRcpp
 {
 
-class SparseGPR: public gpr
+class ExactGPR: public gpr
 {
 public:
     using gpr::gpr;
-    ~SparseGPR();
-    void fit(const Eigen::MatrixXd & X_train, const Eigen::MatrixXd & y_train, const Eigen::MatrixXd & inducing_points);
+    ~ExactGPR();
     void fit(const Eigen::MatrixXd & X_train, const Eigen::MatrixXd & y_train) override;
-    void fit_with_dtc();
-    void fit_with_fitc();
     gpr_results predict(const Eigen::MatrixXd & X_test) override;
     gpr_results predict(const Eigen::MatrixXd & X_test, const bool & return_cov) override;
 

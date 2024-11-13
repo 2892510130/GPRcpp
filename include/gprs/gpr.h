@@ -24,16 +24,15 @@ public:
 
     ~gpr();
 
-    void fit(const Eigen::MatrixXd & X_train, const Eigen::MatrixXd & y_train);
+    virtual void fit(const Eigen::MatrixXd & X_train, const Eigen::MatrixXd & y_train) = 0;
 
-    gpr_results predict(const Eigen::MatrixXd & X_test);
+    virtual gpr_results predict(const Eigen::MatrixXd & X_test) = 0;
 
-    gpr_results predict(const Eigen::MatrixXd & X_test, const bool & return_cov);
+    virtual gpr_results predict(const Eigen::MatrixXd & X_test, const bool & return_cov) = 0;
 
 public:
     std::shared_ptr<kernel_base> kernel_;
     double alpha_ = 1e-10;
-    double beta_;
     Eigen::MatrixXd L_;
     Eigen::MatrixXd Alpha_;
     bool has_x_train_;

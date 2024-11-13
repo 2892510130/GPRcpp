@@ -2,7 +2,7 @@
 #include <fstream>
 #include <Eigen/Core>
 #include <vector>
-#include "gprs/gpr.h"
+#include "gprs/exact_gpr.h"
 #include <chrono>
 
 using namespace GPRcpp;
@@ -16,8 +16,8 @@ void get_features(const std::vector<Eigen::RowVector4d> &v, Eigen::MatrixXd &inp
 
 int main(int argc, char *argv[]) 
 {
-    gpr gpr_obj_w;
-    gpr gpr_obj_v;
+    ExactGPR gpr_obj_w;
+    ExactGPR gpr_obj_v;
     int input_size_ = 1230;
     int train_sample_size = atoi(argv[1]);
     int test_sample_size = atoi(argv[2]);
@@ -40,8 +40,8 @@ int main(int argc, char *argv[])
     std::shared_ptr<kernel_base> product_kernel_Ptr_v = std::make_shared<product_kernel>(constant_kernel_Ptr_v, rbf_kernel_Ptr_v);
     std::shared_ptr<kernel_base> kernelPtr_v = std::make_shared<sum_kernel>(product_kernel_Ptr_v, white_kernel_Ptr_v);
 
-    gpr_obj_w = gpr(kernelPtr_w);
-    gpr_obj_v = gpr(kernelPtr_v);
+    gpr_obj_w = ExactGPR(kernelPtr_w);
+    gpr_obj_v = ExactGPR(kernelPtr_v);
 
     {
         /***  Loading Data ***/
