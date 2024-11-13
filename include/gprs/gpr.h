@@ -25,7 +25,9 @@ public:
     ~gpr();
 
     virtual void fit(const Eigen::MatrixXd & X_train, const Eigen::MatrixXd & y_train) = 0;
-
+    
+    virtual void fit(const Eigen::MatrixXd & X_train, const Eigen::MatrixXd & y_train, const Eigen::MatrixXd & inducing_points) = 0;
+    
     virtual gpr_results predict(const Eigen::MatrixXd & X_test) = 0;
 
     virtual gpr_results predict(const Eigen::MatrixXd & X_test, const bool & return_cov) = 0;

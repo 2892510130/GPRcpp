@@ -27,6 +27,7 @@ void SparseGPR::fit(const Eigen::MatrixXd & X_train, const Eigen::MatrixXd & y_t
 void SparseGPR::fit(const Eigen::MatrixXd & X_train, const Eigen::MatrixXd & y_train)
 {
     std::cout << "<!!!! It is sparse GPR, please use fit function with inducing points !!!!>" << std::endl;
+    throw std::runtime_error("Not implemented");
 }
 
 void SparseGPR::fit_with_dtc()
