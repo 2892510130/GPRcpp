@@ -8,11 +8,17 @@ namespace GPRcpp
     {
         params_.resize(length_scale.cols());
 
-        int i = 0;
-        for(auto l : length_scale)
+        // This can not work before Eigen 3.4
+        // int i = 0;
+        // for(auto l : length_scale)
+        // {
+        //     params_[i] = l;
+        //     i += 1;
+        // }
+
+        for(int i = 0; i < length_scale.size(); i++)
         {
-            params_[i] = l;
-            i += 1;
+            params_[i] = length_scale(i);
         }
 
         m_length_scale = length_scale;
