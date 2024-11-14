@@ -34,6 +34,7 @@ public:
 
 public:
     std::shared_ptr<kernel_base> kernel_;
+    int reference_method = 0;
     double alpha_ = 1e-10;
     Eigen::MatrixXd L_;
     Eigen::MatrixXd Alpha_;

@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
     // std::shared_ptr<kernel_base> realkernelPtr = std::make_shared<sum_kernel>(realkernelPtr_1, realkernelPtr_2);
     SparseGPR spgp(realkernelPtr, false);
     spgp.alpha_ = 1e-8;
-    spgp.sparse_method = 1;
+    spgp.reference_method = 1;
     spgp.fit(data.m_feature, data.m_output.col(0), data.m_inducing_points);
     auto result = spgp.predict(data.m_feature, true);
 

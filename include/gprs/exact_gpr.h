@@ -17,7 +17,6 @@ public:
 public:
     Eigen::MatrixXd m_inducing_point;
     Eigen::MatrixXd woodbury_inv;
-    int sparse_method = 0; // 0 for varDTC, 1 for FITC
 };
 
 } // namespace GPRcpp

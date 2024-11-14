@@ -20,8 +20,8 @@ void SparseGPR::fit(const Eigen::MatrixXd & X_train, const Eigen::MatrixXd & y_t
         y_train_ = (y_train_.rowwise() - y_train_mean_).array().rowwise() / y_train_std_.array();
     }
 
-    if (sparse_method == 0) fit_with_dtc();
-    else if (sparse_method == 1) fit_with_fitc();
+    if (reference_method == 0) fit_with_dtc();
+    else if (reference_method == 1) fit_with_fitc();
 }
 
 void SparseGPR::fit(const Eigen::MatrixXd & X_train, const Eigen::MatrixXd & y_train)
