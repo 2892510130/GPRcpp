@@ -28,15 +28,16 @@ void ExactGPR::fit(const Eigen::MatrixXd & X_train, const Eigen::MatrixXd & y_tr
     auto K = kernel_->evaluate(X_train_);
     K += Eigen::MatrixXd::Identity(K.rows(), K.cols()) * alpha_;
 
-    L_ = K.llt().matrixL(); // This one will have problem in aarch64 platform, dont know why, use LDLT instead
+    Eigen::LLT<Eigen::MatrixXd> LLT_ = K.llt();
+    L_ = LLT_.matrixL(); // This one will have problem in aarch64 platform, dont know why, use LDLT instead
     // Eigen::LDLT<Eigen::MatrixXd> ldlt = K.ldlt();
     // auto L = ldlt.matrixL();
     // auto D = ldlt.vectorD().cwiseSqrt();  // D 的平方根
     // L_ = L * D.asDiagonal().toDenseMatrix();
     // std::cout << (L_ * L_.transpose() - K).sum() << std::endl;
+    // std::cout << L_ << std::endl;
 
-    Eigen::MatrixXd temp_y = L_.triangularView<Eigen::Lower>().solve(y_train_);
-    Alpha_ = L_.transpose().triangularView<Eigen::Upper>().solve(temp_y);
+    Alpha_ = LLT_.solve(y_train_);
     // std::cout << "temp_y decomp:\n" << temp_y.matrix() << std::endl;
     // std::cout << "Alpha_:\n" << Alpha_ << std::endl;
     // std::cout << "direct solver answer of K wrt y_train:\n" << K.llt().solve(y_train_) << std::endl;

@@ -5,8 +5,9 @@ body {
 </style>
 
 ## TODO LIST (Clean at 2024.11.12)
+- [ ] Use the compute and solve in llt
 - [x] Implement FITC method
-- [ ] Make it good for graduation project
+- [x] Make it good for graduation project
 
 ## Change Log
 - 2024.11.13: FITC inference method implemented

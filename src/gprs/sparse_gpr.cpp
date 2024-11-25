@@ -32,21 +32,35 @@ void SparseGPR::fit(const Eigen::MatrixXd & X_train, const Eigen::MatrixXd & y_t
 
 void SparseGPR::fit_with_dtc()
 {
-    double precision = 1.0 / fmax(1.0, alpha_); // TODO: Change it after test (JBL)
+    double precision = 1.0 / fmax(likelihood_varience, alpha_); // TODO: Change it after test (JBL)
 
     // Get Kmm and Lm from the inducing points
     Eigen::MatrixXd VVT_factor = precision * y_train_; // (Y - mean) if mean is not 0
     double trYYT = VVT_factor.squaredNorm();
     Eigen::MatrixXd Kmm = kernel_->evaluate(m_inducing_point);
     Kmm += Eigen::MatrixXd::Identity(Kmm.rows(), Kmm.cols()) * alpha_;
-    Eigen::MatrixXd Lm = Kmm.llt().matrixL();
+    Eigen::LLT<Eigen::MatrixXd> Lm_LLT = Kmm.llt();
+    Eigen::MatrixXd Lm = Lm_LLT.matrixL();
+
+    // If you need to bypass the llt
+    // Eigen::LDLT<Eigen::MatrixXd> Lm_LLT = Kmm.ldlt();
+    // Eigen::MatrixXd L1 = Lm_LLT.matrixL();
+    // Eigen::MatrixXd D1 = Lm_LLT.vectorD().cwiseSqrt();  // D 的平方根
+    // Eigen::MatrixXd Lm = Lm_LLT.transpositionsP() *  L1 * D1.asDiagonal().toDenseMatrix();
 
     // Compute psi stats and factor B
     Eigen::MatrixXd psi1 = kernel_->evaluate(X_train_, m_inducing_point);
     Eigen::MatrixXd tmp1 = psi1 * sqrt(precision);
     Eigen::MatrixXd tmp2 = Lm.triangularView<Eigen::Lower>().solve(tmp1.transpose());
     Eigen::MatrixXd B = tmp2 * tmp2.transpose() + Eigen::MatrixXd::Identity(Kmm.rows(), Kmm.cols()); // If you want to compute log margin, seperate this
-    Eigen::MatrixXd LB = B.llt().matrixL();
+    Eigen::LLT<Eigen::MatrixXd> LB_LLT = B.llt();
+    Eigen::MatrixXd LB = LB_LLT.matrixL();
+
+    // If you need to bypass the llt
+    // Eigen::LDLT<Eigen::MatrixXd> LB_LLT = B.ldlt();
+    // Eigen::MatrixXd L2 = LB_LLT.matrixL();
+    // Eigen::MatrixXd D2 = LB_LLT.vectorD().cwiseSqrt();  // D 的平方根
+    // Eigen::MatrixXd LB = LB_LLT.transpositionsP() *  L2 * D2.asDiagonal().toDenseMatrix();
 
     // compute woodbury inv and vector
     Eigen::MatrixXd tmp3 = Lm.triangularView<Eigen::Lower>().solve(psi1.transpose());
@@ -54,10 +68,9 @@ void SparseGPR::fit_with_dtc()
     Eigen::MatrixXd LBi_Lmi_psi1_vf = LBi_Lmi_psi1 * VVT_factor;
     Eigen::MatrixXd tmp4 = LB.transpose().triangularView<Eigen::Upper>().solve(LBi_Lmi_psi1_vf);
     Alpha_ = Lm.transpose().triangularView<Eigen::Upper>().solve(tmp4);
-    Eigen::MatrixXd Bi = -1.0 * LB.transpose().triangularView<Eigen::Upper>().solve(
-            LB.triangularView<Eigen::Lower>().solve(Eigen::MatrixXd::Identity(LB.rows(), LB.cols()))) + Eigen::MatrixXd::Identity(LB.rows(), LB.cols());
+    Eigen::MatrixXd Bi = -1.0 * LB_LLT.solve(Eigen::MatrixXd::Identity(LB.rows(), LB.cols())) + Eigen::MatrixXd::Identity(LB.rows(), LB.cols());
     woodbury_inv = (Lm.transpose().triangularView<Eigen::Upper>().solve((Lm.transpose().triangularView<Eigen::Upper>().solve(Bi)).transpose())).transpose();
-    
+    // woodbury_inv = Lm_LLT.solve(Bi); // TODO: fix it
 
     // For debug
     // std::cout << "\nInducing point is:\n" << m_inducing_point << std::endl;
@@ -66,6 +79,7 @@ void SparseGPR::fit_with_dtc()
     // std::cout << "\nKmm is:\n" << Kmm << std::endl;
     // std::cout << "\nLm is:\n" << Lm << std::endl;
     // std::cout << "\npsi1 is:\n" << psi1 << std::endl;
+    // std::cout << "\ntmp1 is:\n" << tmp1 << std::endl;
     // std::cout << "\ntmp2 is:\n" << tmp2 << std::endl;
     // std::cout << "\nB is:\n" << B << std::endl;
     // std::cout << "\nLB is:\n" << LB << std::endl;
@@ -78,10 +92,10 @@ void SparseGPR::fit_with_dtc()
     // std::cout << "\nwoodbury_inv is:\n" << woodbury_inv << std::endl;
 }
 
-void SparseGPR::fit_with_fitc()
+void SparseGPR::fit_with_fitc() // TODO: change it as dtc
 {
     alpha_ = 1e-6;
-    double sigma_n = 1.0; // TODO: make it changable (JBL)
+    double sigma_n = likelihood_varience; // TODO: make it changable (JBL)
     Eigen::MatrixXd Kmm = kernel_->evaluate(m_inducing_point);
     Eigen::MatrixXd Knn = kernel_->k_diag(X_train_); // FIRST IMPLEMENT THIS
     Eigen::MatrixXd Knm = kernel_->evaluate(X_train_, m_inducing_point);

@@ -36,6 +36,7 @@ public:
     std::shared_ptr<kernel_base> kernel_;
     int inference_method = 0;
     double alpha_ = 1e-10;
+    double likelihood_varience = 1.0;
     Eigen::MatrixXd L_;
     Eigen::MatrixXd Alpha_;
     bool has_x_train_;
