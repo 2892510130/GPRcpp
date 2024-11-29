@@ -105,7 +105,7 @@ void SparseGPR::fit_with_dtc()
     // std::cout << "\nwoodbury_inv is:\n" << woodbury_inv << std::endl;
 }
 
-void SparseGPR::fit_with_fitc() // TODO: change it as dtc
+void SparseGPR::fit_with_fitc()
 {
     alpha_ = 1e-6;
     double sigma_n = likelihood_varience;

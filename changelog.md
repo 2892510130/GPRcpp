@@ -5,7 +5,8 @@ body {
 </style>
 
 ## TODO LIST (Clean at 2024.11.12)
-- [ ] Use the compute and solve in llt
+- [ ] maybe realtime update model
+- [x] Use the compute and solve in llt
 - [x] Implement FITC method
 - [x] Make it good for graduation project
 
