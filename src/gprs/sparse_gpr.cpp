@@ -8,6 +8,7 @@ namespace GPRcpp
 void SparseGPR::fit(const Eigen::MatrixXd & X_train, const Eigen::MatrixXd & y_train, const Eigen::MatrixXd & inducing_points)
 {
     std::cout << "<***** Fitting Sparse GPR *****>" << std::endl;
+    if (use_ldlt_) std::cout << "<***** Using the LDLT! *****>" << std::endl;
     has_x_train_ = true;
     X_train_ = X_train;
     y_train_ = y_train;
@@ -32,35 +33,49 @@ void SparseGPR::fit(const Eigen::MatrixXd & X_train, const Eigen::MatrixXd & y_t
 
 void SparseGPR::fit_with_dtc()
 {
-    double precision = 1.0 / fmax(likelihood_varience, alpha_); // TODO: Change it after test (JBL)
+    double precision = 1.0 / fmax(likelihood_varience, alpha_);
 
     // Get Kmm and Lm from the inducing points
     Eigen::MatrixXd VVT_factor = precision * y_train_; // (Y - mean) if mean is not 0
     double trYYT = VVT_factor.squaredNorm();
     Eigen::MatrixXd Kmm = kernel_->evaluate(m_inducing_point);
     Kmm += Eigen::MatrixXd::Identity(Kmm.rows(), Kmm.cols()) * alpha_;
-    Eigen::LLT<Eigen::MatrixXd> Lm_LLT = Kmm.llt();
-    Eigen::MatrixXd Lm = Lm_LLT.matrixL();
+    Eigen::MatrixXd Lm;
 
-    // If you need to bypass the llt
-    // Eigen::LDLT<Eigen::MatrixXd> Lm_LLT = Kmm.ldlt();
-    // Eigen::MatrixXd L1 = Lm_LLT.matrixL();
-    // Eigen::MatrixXd D1 = Lm_LLT.vectorD().cwiseSqrt();  // D 的平方根
-    // Eigen::MatrixXd Lm = Lm_LLT.transpositionsP() *  L1 * D1.asDiagonal().toDenseMatrix();
+    if (!use_ldlt_)
+    {
+        Eigen::LLT<Eigen::MatrixXd> Lm_LLT = Kmm.llt();
+        Lm = Lm_LLT.matrixL();
+    }
+    else
+    {
+        Eigen::LDLT<Eigen::MatrixXd> Lm_LDLT = Kmm.ldlt();
+        Eigen::MatrixXd L1 = Lm_LDLT.matrixL();
+        Eigen::MatrixXd D1 = Lm_LDLT.vectorD().cwiseSqrt();  // D 的平方根
+        Lm = Lm_LDLT.transpositionsP() *  L1 * D1.asDiagonal().toDenseMatrix();
+    }
 
     // Compute psi stats and factor B
     Eigen::MatrixXd psi1 = kernel_->evaluate(X_train_, m_inducing_point);
     Eigen::MatrixXd tmp1 = psi1 * sqrt(precision);
     Eigen::MatrixXd tmp2 = Lm.triangularView<Eigen::Lower>().solve(tmp1.transpose());
     Eigen::MatrixXd B = tmp2 * tmp2.transpose() + Eigen::MatrixXd::Identity(Kmm.rows(), Kmm.cols()); // If you want to compute log margin, seperate this
-    Eigen::LLT<Eigen::MatrixXd> LB_LLT = B.llt();
-    Eigen::MatrixXd LB = LB_LLT.matrixL();
+    Eigen::MatrixXd LB, Bi;
 
-    // If you need to bypass the llt
-    // Eigen::LDLT<Eigen::MatrixXd> LB_LLT = B.ldlt();
-    // Eigen::MatrixXd L2 = LB_LLT.matrixL();
-    // Eigen::MatrixXd D2 = LB_LLT.vectorD().cwiseSqrt();  // D 的平方根
-    // Eigen::MatrixXd LB = LB_LLT.transpositionsP() *  L2 * D2.asDiagonal().toDenseMatrix();
+    if (!use_ldlt_)
+    {
+        Eigen::LLT<Eigen::MatrixXd> LB_LLT = B.llt();
+        LB = LB_LLT.matrixL();
+        Bi = -1.0 * LB_LLT.solve(Eigen::MatrixXd::Identity(LB.rows(), LB.cols())) + Eigen::MatrixXd::Identity(LB.rows(), LB.cols());
+    }
+    else
+    {
+        Eigen::LDLT<Eigen::MatrixXd> LB_LDLT = B.ldlt();
+        Eigen::MatrixXd L2 = LB_LDLT.matrixL();
+        Eigen::MatrixXd D2 = LB_LDLT.vectorD().cwiseSqrt();  // D 的平方根
+        LB = LB_LDLT.transpositionsP() *  L2 * D2.asDiagonal().toDenseMatrix();
+        Bi = -1.0 * LB_LDLT.solve(Eigen::MatrixXd::Identity(LB.rows(), LB.cols())) + Eigen::MatrixXd::Identity(LB.rows(), LB.cols());
+    }
 
     // compute woodbury inv and vector
     Eigen::MatrixXd tmp3 = Lm.triangularView<Eigen::Lower>().solve(psi1.transpose());
@@ -68,9 +83,7 @@ void SparseGPR::fit_with_dtc()
     Eigen::MatrixXd LBi_Lmi_psi1_vf = LBi_Lmi_psi1 * VVT_factor;
     Eigen::MatrixXd tmp4 = LB.transpose().triangularView<Eigen::Upper>().solve(LBi_Lmi_psi1_vf);
     Alpha_ = Lm.transpose().triangularView<Eigen::Upper>().solve(tmp4);
-    Eigen::MatrixXd Bi = -1.0 * LB_LLT.solve(Eigen::MatrixXd::Identity(LB.rows(), LB.cols())) + Eigen::MatrixXd::Identity(LB.rows(), LB.cols());
     woodbury_inv = (Lm.transpose().triangularView<Eigen::Upper>().solve((Lm.transpose().triangularView<Eigen::Upper>().solve(Bi)).transpose())).transpose();
-    // woodbury_inv = Lm_LLT.solve(Bi); // TODO: fix it
 
     // For debug
     // std::cout << "\nInducing point is:\n" << m_inducing_point << std::endl;
@@ -95,22 +108,49 @@ void SparseGPR::fit_with_dtc()
 void SparseGPR::fit_with_fitc() // TODO: change it as dtc
 {
     alpha_ = 1e-6;
-    double sigma_n = likelihood_varience; // TODO: make it changable (JBL)
+    double sigma_n = likelihood_varience;
     Eigen::MatrixXd Kmm = kernel_->evaluate(m_inducing_point);
     Eigen::MatrixXd Knn = kernel_->k_diag(X_train_); // FIRST IMPLEMENT THIS
     Eigen::MatrixXd Knm = kernel_->evaluate(X_train_, m_inducing_point);
     Kmm += Eigen::MatrixXd::Identity(Kmm.rows(), Kmm.cols()) * alpha_;
-    Eigen::MatrixXd Lm = Kmm.llt().matrixL();
+    Eigen::MatrixXd Lm, Kmmi;
+
+    if (!use_ldlt_)
+    {
+        Eigen::LLT<Eigen::MatrixXd> Lm_LLT = Kmm.llt();
+        Lm = Lm_LLT.matrixL();
+        Kmmi = Lm_LLT.solve(Eigen::MatrixXd::Identity(Lm.rows(), Lm.cols()));
+    }
+    else
+    {
+        Eigen::LDLT<Eigen::MatrixXd> Lm_LDLT = Kmm.ldlt();
+        Eigen::MatrixXd L1 = Lm_LDLT.matrixL();
+        Eigen::MatrixXd D1 = Lm_LDLT.vectorD().cwiseSqrt();  // D 的平方根
+        Lm = Lm_LDLT.transpositionsP() *  L1 * D1.asDiagonal().toDenseMatrix();
+        Kmmi = Lm_LDLT.solve(Eigen::MatrixXd::Identity(Lm.rows(), Lm.cols()));
+    }
+
     Eigen::MatrixXd Lmi = Lm.triangularView<Eigen::Lower>().solve(Eigen::MatrixXd::Identity(Lm.rows(), Lm.cols()));
-    Eigen::MatrixXd Kmmi = Lm.transpose().triangularView<Eigen::Upper>().solve(
-            Lm.triangularView<Eigen::Lower>().solve(Eigen::MatrixXd::Identity(Lm.rows(), Lm.cols())));
     
     // compute beta_star
     Eigen::MatrixXd LiUT = Lmi * Knm.transpose();
     Eigen::MatrixXd beta_star = 1.0 / (Knn.array() + sigma_n - LiUT.colwise().squaredNorm().transpose().array());// - LiUT.colwise().squaredNorm().array();Knn.array() + sigma_n
     Eigen::MatrixXd beta_star_sqrt = LiUT.array() * beta_star.array().sqrt().transpose().replicate(LiUT.rows(), 1);
     Eigen::MatrixXd A = beta_star_sqrt * beta_star_sqrt.transpose() + Eigen::MatrixXd::Identity(Kmm.rows(), Kmm.cols());
-    Eigen::MatrixXd LA = A.llt().matrixL();
+    Eigen::MatrixXd LA;
+
+    if (!use_ldlt_)
+    {
+        Eigen::LLT<Eigen::MatrixXd> LA_LLT = A.llt();
+        LA = LA_LLT.matrixL();
+    }
+    else
+    {
+        Eigen::LDLT<Eigen::MatrixXd> LA_LDLT = A.ldlt();
+        Eigen::MatrixXd L1 = LA_LDLT.matrixL();
+        Eigen::MatrixXd D1 = LA_LDLT.vectorD().cwiseSqrt();  // D 的平方根
+        LA = LA_LDLT.transpositionsP() *  L1 * D1.asDiagonal().toDenseMatrix();
+    }
 
     // back substutue
     Eigen::MatrixXd URiy = (Knm.array() * beta_star.array().replicate(1, Knm.cols())).matrix().transpose() * y_train_; //beta_star.array().replicate() Knm.array().transpose()

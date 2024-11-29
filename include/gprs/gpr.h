@@ -41,6 +41,7 @@ public:
     Eigen::MatrixXd Alpha_;
     bool has_x_train_;
     bool normalize_y_ = false;
+    bool use_ldlt_ = false;
     Eigen::MatrixXd X_train_;
     Eigen::MatrixXd y_train_;
     Eigen::RowVectorXd y_train_mean_;

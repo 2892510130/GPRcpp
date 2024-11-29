@@ -9,30 +9,58 @@
 
 using namespace GPRcpp;
 
-int main(int argc, char *argv[]) 
+void test_with_minimal_data()
 {
-    // std::string file_path = "../Log/test_util.txt";
-    // GPData data = read_sparse_gp_data_from_file(file_path, 4, 2, 3, 2, true);
-    // std::cout << data.m_feature << std::endl;
-    // std::cout << data.m_output << std::endl;
-    // std::cout << data.m_inducing_points << std::endl;
-    // std::cout << data.m_inducing_points_additional << std::endl;
-    // Eigen::RowVectorXd ard_length_scale_ = Eigen::RowVectorXd(4);
-    // ard_length_scale_ << 1, 2, 3, 4;
-    // double ard_length_scale_2 = 0.5;
-    // std::shared_ptr<kernel_base> constant_kernel_ptr = std::make_shared<constant_kernel>(0.5);
-    // std::shared_ptr<kernel_base> constant_kernel_ptr_2 = std::make_shared<constant_kernel>(2);
-    // std::shared_ptr<kernel_base> rbf_kernel_ptr = std::make_shared<rbf_kernel>(ard_length_scale_);
-    // std::shared_ptr<kernel_base> rbf_kernel_ptr_2 = std::make_shared<rbf_kernel>(ard_length_scale_2);
-    // std::shared_ptr<kernel_base> realkernelPtr_1 = std::make_shared<product_kernel>(constant_kernel_ptr, rbf_kernel_ptr);
-    // std::shared_ptr<kernel_base> realkernelPtr_2 = std::make_shared<product_kernel>(constant_kernel_ptr_2, rbf_kernel_ptr_2);
-    // std::shared_ptr<kernel_base> realkernelPtr = std::make_shared<sum_kernel>(realkernelPtr_1, realkernelPtr_2);
+    /* In varDTC
+        mu:
+        [[-0.28384087]
+        [ 0.64530795]
+        [ 0.27753041]]
+        cov:
+        [[0.68861111 0.08581716 0.01170406]
+        [0.08581716 0.61724472 0.25306279]
+        [0.01170406 0.25306279 2.20023659]]
 
-    // SparseGPR spgp(realkernelPtr, false);
-    // spgp.alpha_ = 1e-8;
-    // spgp.fit(data.m_feature, data.m_output.col(0), data.m_inducing_points);
-    // auto result = spgp.predict(data.m_feature, true);
+       In FITC
+        mu:
+        [[-0.2942645 ]
+        [ 0.41992537]
+        [ 0.1844007 ]]
+        cov:
+        [[0.68871227 0.08797517 0.01259572]
+        [0.08797517 0.66390237 0.27234206]
+        [0.01259572 0.27234206 2.20820292]]
+    */
+    std::string file_path = "../Log/test_util.txt";
+    GPData data = read_sparse_gp_data_from_file(file_path, 4, 2, 3, 2, true);
+    std::cout << data.m_feature << std::endl;
+    std::cout << data.m_output << std::endl;
+    std::cout << data.m_inducing_points << std::endl;
+    std::cout << data.m_inducing_points_additional << std::endl;
+    Eigen::RowVectorXd ard_length_scale_ = Eigen::RowVectorXd(4);
+    ard_length_scale_ << 1, 2, 3, 4;
+    double ard_length_scale_2 = 0.5;
+    std::shared_ptr<kernel_base> constant_kernel_ptr = std::make_shared<constant_kernel>(0.5);
+    std::shared_ptr<kernel_base> constant_kernel_ptr_2 = std::make_shared<constant_kernel>(2);
+    std::shared_ptr<kernel_base> rbf_kernel_ptr = std::make_shared<rbf_kernel>(ard_length_scale_);
+    std::shared_ptr<kernel_base> rbf_kernel_ptr_2 = std::make_shared<rbf_kernel>(ard_length_scale_2);
+    std::shared_ptr<kernel_base> realkernelPtr_1 = std::make_shared<product_kernel>(constant_kernel_ptr, rbf_kernel_ptr);
+    std::shared_ptr<kernel_base> realkernelPtr_2 = std::make_shared<product_kernel>(constant_kernel_ptr_2, rbf_kernel_ptr_2);
+    std::shared_ptr<kernel_base> realkernelPtr = std::make_shared<sum_kernel>(realkernelPtr_1, realkernelPtr_2);
 
+    SparseGPR spgp(realkernelPtr, false);
+    spgp.alpha_ = 1e-8;
+    spgp.use_ldlt_ = true;
+    spgp.inference_method = 1;
+    spgp.fit(data.m_feature, data.m_output.col(0), data.m_inducing_points);
+    auto result = spgp.predict(data.m_feature, true);
+
+    std::cout << "\nmean:\n" << result.y_mean << std::endl;
+    std::cout << "\ncov:\n" << result.y_cov << std::endl;
+}
+
+void test_with_big_data()
+{
     std::string file_path = "../Log/test.txt";
     GPData data = read_sparse_gp_data_from_file(file_path, 12, 2, 520, 40, true);
     Eigen::RowVectorXd ard_length_scale_ = Eigen::RowVectorXd(12);
@@ -52,32 +80,20 @@ int main(int argc, char *argv[])
     spgp.fit(data.m_feature, data.m_output.col(1), data.m_inducing_points_additional);
     auto result = spgp.predict(data.m_feature, true);
 
-
-    // ExactGPR gpr(realkernelPtr, true);
-    // gpr.fit(data.m_feature, data.m_output.col(1));
-    // auto result = gpr.predict(data.m_feature, true);
-
     std::cout << "\nmean:\n" << result.y_mean.block(0, 0, 16, 1) << std::endl;
     std::cout << "\ncov:\n" << result.y_cov.block(0, 0, 4, 4) << std::endl;
-    
-    // Try to optimize the calculate of the dist function, but no progress
-    // auto start = std::chrono::high_resolution_clock::now();
-    // for (int i = 0; i < 10; i++) rbf_kernel_ptr.get()->evaluate(data.m_feature, data.m_output);
-    // auto end = std::chrono::high_resolution_clock::now();
-    // auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
-    // std::cout << "Duration is: " << duration << "ms." << std::endl;
-    // {
-    // Eigen::MatrixXd B = realkernelPtr->evaluate(data.m_feature.block(0, 0, 485, 12));
-    // // std::cout << B << std::endl;
-    // Eigen::MatrixXd LB = B.llt().matrixL();
-    // Eigen::LDLT<Eigen::MatrixXd> ldlt = B.ldlt();
-    // Eigen::MatrixXd L2 = ldlt.matrixL();
-    // Eigen::MatrixXd D2 = ldlt.vectorD().cwiseSqrt();  // D 的平方根
-    // Eigen::MatrixXd LB2 = L2 * D2.asDiagonal().toDenseMatrix();
-    // std::cout << "Difference between LB and LB2: " << (LB*LB.transpose() - B).norm() << std::endl;
-    // std::cout << "Difference between LB and LB2: " << (L2*D2.asDiagonal()*D2.asDiagonal()*L2.transpose() - B).norm() << std::endl;
-    // }
+}
 
+int main(int argc, char *argv[]) 
+{
+    if (atoi(argv[1]) == 0)
+    {
+        test_with_minimal_data();
+    }
+    else
+    {
+        test_with_big_data();
+    }
 
     return 0;
 }
