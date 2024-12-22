@@ -11,6 +11,7 @@ public:
     Eigen::MatrixXd k_diag(const Eigen::MatrixXd & x1) const override;
     Eigen::MatrixXd evaluate(const Eigen::MatrixXd & x1) const override;
     Eigen::MatrixXd evaluate(const Eigen::MatrixXd & x1, const Eigen::MatrixXd & x2) const override;
+    Eigen::MatrixXd dk_dx(const Eigen::MatrixXd & x1, const Eigen::MatrixXd & x2) const override;
 
 protected:
 

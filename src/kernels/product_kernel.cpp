@@ -22,4 +22,9 @@ Eigen::MatrixXd product_kernel::k_diag(const Eigen::MatrixXd & x1) const
     return product;
 }
 
+Eigen::MatrixXd product_kernel::dk_dx(const Eigen::MatrixXd & x1, const Eigen::MatrixXd & x2) const
+{
+    return left_->dk_dx(x1, x2).array() * right_->evaluate(x1, x2).replicate(1, x2.cols()).array() + left_->evaluate(x1, x2).replicate(1, x2.cols()).array() * right_->dk_dx(x1, x2).array();
+}
+
 }

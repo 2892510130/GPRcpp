@@ -92,10 +92,33 @@ gpr_results ExactGPR::predict(const Eigen::MatrixXd & X_test)
     return predict(X_test, false);
 }
 
-Eigen::MatrixXd ExactGPR::predict_at_uncertain_input(const Eigen::MatrixXd & X_test, const Eigen::MatrixXd & input_cov)
+gpr_results ExactGPR::predict_at_uncertain_input(const Eigen::MatrixXd & X_test, Eigen::MatrixXd & input_cov)
 {
-   Eigen::MatrixXd test =  Eigen::MatrixXd::Zero(1, 1);
-   return test;
+    if (X_test.rows() != 1) throw std::runtime_error("Only support 1 sample input!");
+
+    const Eigen::MatrixXd dk_dx =  kernel_->dk_dx(X_train_, X_test);
+
+    const Eigen::MatrixXd dmu_dx = dk_dx.transpose() * Alpha_;
+
+    const Eigen::MatrixXd first_order_varience = dmu_dx.transpose() * input_cov * dmu_dx;
+
+    gpr_results certain_predict = predict(X_test, true);
+
+    // std::cout << "[ExactGPR]: dk_dx is:\n" << dk_dx << std::endl;
+    // std::cout << "[ExactGPR]: Alpha_ is:\n" << Alpha_ << std::endl;
+    // std::cout << "[ExactGPR]: dmu_dx is:\n" << dmu_dx << std::endl;
+    // std::cout << "[ExactGPR]: first_order_varience is:\n" << first_order_varience << std::endl;
+    // std::cout << "[ExactGPR]: exact cov is:\n" << certain_predict.y_cov << std::endl;
+
+    certain_predict.y_cov += first_order_varience;
+
+    // update the cov without covariance
+    for (int i = input_cov.rows() - 1; i > 0; --i) {
+        input_cov(i, i) = input_cov(i - 1, i - 1);
+    }
+    input_cov(0, 0) = certain_predict.y_cov(0, 0);
+
+    return certain_predict;
 }
 
 ExactGPR::~ExactGPR()

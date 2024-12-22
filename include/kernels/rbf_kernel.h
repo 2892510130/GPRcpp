@@ -13,6 +13,7 @@ public:
     Eigen::MatrixXd evaluate(const Eigen::MatrixXd & x1) const override;
     Eigen::MatrixXd evaluate(const Eigen::MatrixXd & x1, const Eigen::MatrixXd & x2) const override;
     Eigen::MatrixXd squareform(const Eigen::MatrixXd & x, size_t size_) const;
+    Eigen::MatrixXd dk_dx(const Eigen::MatrixXd & x1, const Eigen::MatrixXd & x2) const override;
 
 protected:
 

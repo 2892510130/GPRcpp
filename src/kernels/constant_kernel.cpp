@@ -22,4 +22,9 @@ namespace GPRcpp
     {
         return Eigen::MatrixXd::Constant(x1.rows(), x2.rows(), params_[0]);
     }
+
+    Eigen::MatrixXd constant_kernel::dk_dx(const Eigen::MatrixXd & x1, const Eigen::MatrixXd & x2) const
+    {
+        return Eigen::MatrixXd::Zero(x1.rows(), x1.cols());
+    }
 } // namespace GPRcpp

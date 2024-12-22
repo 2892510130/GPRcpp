@@ -24,4 +24,9 @@ namespace GPRcpp
         Eigen::MatrixXd k = Eigen::MatrixXd::Zero(x1.rows(), x2.rows());
         return k;
     }
+
+    Eigen::MatrixXd white_kernel::dk_dx(const Eigen::MatrixXd & x1, const Eigen::MatrixXd & x2) const
+    {
+        return Eigen::MatrixXd::Zero(x1.rows(), x1.cols());
+    }
 } // namespace GPRcpp

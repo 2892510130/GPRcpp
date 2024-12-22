@@ -21,4 +21,9 @@ Eigen::MatrixXd sum_kernel::k_diag(const Eigen::MatrixXd & x1) const
     return sum_;
 }
 
+Eigen::MatrixXd sum_kernel::dk_dx(const Eigen::MatrixXd & x1, const Eigen::MatrixXd & x2) const
+{
+    return left_->dk_dx(x1, x2) + right_->dk_dx(x1, x2);
+}
+
 }

@@ -83,4 +83,26 @@ namespace GPRcpp
         }
         return k;
     }
+
+    Eigen::MatrixXd rbf_kernel::dk_dx(const Eigen::MatrixXd & x1, const Eigen::MatrixXd & x2) const
+    {
+        Eigen::MatrixXd dk_dl_left = (x1 - x2.replicate(x1.rows(), 1)).array() / m_length_scale.replicate(x1.rows(), 1).array().square();
+
+        // std::cout << "History data:" << std::endl;
+        // std::cout << x1 << std::endl;
+        // std::cout << "New data:" << std::endl;
+        // std::cout << x2 << std::endl;
+        // std::cout << "dk_dl without lengthscale" << std::endl;
+        // std::cout << x1 - x2.replicate(x1.rows(), 1) << std::endl;
+        // std::cout << "Length scale:" << std::endl;
+        // std::cout << m_length_scale << std::endl;
+        // std::cout << "dk_dl_left" << std::endl;
+        // std::cout << dk_dl_left << std::endl;
+        // std::cout << "dk_dl_right" << std::endl;
+        // std::cout << evaluate(x1, x2).replicate(1, x2.cols()).array() << std::endl;
+        // std::cout << "dk_dl" << std::endl;
+        // std::cout << dk_dl_left.array() * evaluate(x1, x2).replicate(1, x2.cols()).array() << std::endl;
+
+        return dk_dl_left.array() * evaluate(x1, x2).replicate(1, x2.cols()).array();
+    }
 } // namespace GPRcpp

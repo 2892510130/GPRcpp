@@ -19,14 +19,17 @@ int main(int argc, char *argv[])
 {
     if (atoi(argv[1]) == 0)
     {
+        std::cout << "You have select minimal data test!" << std::endl;
         test_with_minimal_data();
     }
     else if (atoi(argv[1]) == 1)
     {
+        std::cout << "You have select big data test!" << std::endl;
         test_with_big_data();
     }
     else if (atoi(argv[1]) == 2)
     {
+        std::cout << "You have select uncertainty propagation test!" << std::endl;
         test_uncertainty_propagation();
     }
 
@@ -43,7 +46,56 @@ Test data for the sparse var DTC method is:
 */
 void test_uncertainty_propagation()
 {
+    std::string file_path = "C:\\Users\\pc\\Desktop\\Personal\\Code\\GPRcpp\\Log\\test_util.txt";
+    GPData data = read_sparse_gp_data_from_file(file_path, 4, 2, 3, 2, true);
+
+    Eigen::RowVectorXd ard_length_scale_ = Eigen::RowVectorXd(4);
+    ard_length_scale_ << 1, 2, 3, 4;
+    double ard_length_scale_2 = 0.5;
+
+    std::shared_ptr<kernel_base> rbf_kernel_ptr = std::make_shared<rbf_kernel>(ard_length_scale_);
+    std::shared_ptr<kernel_base> constant_kernel_ptr = std::make_shared<constant_kernel>(0.5);
+    std::shared_ptr<kernel_base> white_kernel_ptr = std::make_shared<white_kernel>(0.33);
+    std::shared_ptr<kernel_base> real_kernel_1 = std::make_shared<product_kernel>(constant_kernel_ptr, rbf_kernel_ptr);
+    std::shared_ptr<kernel_base> real_kernel_2 = std::make_shared<sum_kernel>(real_kernel_1, white_kernel_ptr);
+
+    // For 1 sample with dimension D, this dk_dx will return N * D matrix
+    Eigen::MatrixXd dk_dx_rbf =  rbf_kernel_ptr->dk_dx(data.m_feature, data.m_feature.row(0));
+    Eigen::MatrixXd dk_dx_const =  constant_kernel_ptr->dk_dx(data.m_feature, data.m_feature.row(0));
+    Eigen::MatrixXd dk_dx_white =  white_kernel_ptr->dk_dx(data.m_feature, data.m_feature.row(0));
+    Eigen::MatrixXd dk_dx_product =  real_kernel_1->dk_dx(data.m_feature, data.m_feature.row(0));
+    Eigen::MatrixXd dk_dx_sum =  real_kernel_2->dk_dx(data.m_feature, data.m_feature.row(0));
+
+    std::cout << "rbf dk_dx is:\n" << dk_dx_rbf << std::endl;
+    std::cout << "const dk_dx is:\n" << dk_dx_const << std::endl;
+    std::cout << "white dk_dx is:\n" << dk_dx_white << std::endl;
+    std::cout << "product dk_dx is:\n" << dk_dx_product << std::endl;
+    std::cout << "sum dk_dx is:\n" << dk_dx_sum << std::endl;
+
+    ExactGPR gpr(real_kernel_2, false);
+
+    gpr.fit(data.m_feature, data.m_output.col(0));
+
+    Eigen::MatrixXd cov_before = Eigen::MatrixXd::Identity(data.m_feature.cols(), data.m_feature.cols());
+
+    auto result_1 = gpr.predict_at_uncertain_input(data.m_feature.row(0), cov_before);
+    std::cout << "final mean:\n" << result_1.y_mean << std::endl;
+    std::cout << "final cov:\n" << result_1.y_cov << std::endl;
+    std::cout << "final sigma 1:\n" << cov_before << std::endl;
     
+    gpr.predict_at_uncertain_input(data.m_feature.row(1), cov_before);
+    std::cout << "final sigma 2:\n" << cov_before << std::endl;
+
+    gpr.predict_at_uncertain_input(data.m_feature.row(2), cov_before);
+    std::cout << "final sigma 3:\n" << cov_before << std::endl;
+
+    gpr.predict_at_uncertain_input(data.m_feature.row(1), cov_before);
+    std::cout << "final sigma 4:\n" << cov_before << std::endl;
+
+    gpr.predict_at_uncertain_input(data.m_feature.row(0), cov_before);
+    std::cout << "final sigma 5:\n" << cov_before << std::endl;
+
+    gpr.predict_at_uncertain_input(data.m_feature, cov_before); // Will cause error
 }
 
 void test_with_minimal_data()
@@ -68,7 +120,7 @@ void test_with_minimal_data()
         [0.08797517 0.66390237 0.27234206]
         [0.01259572 0.27234206 2.20820292]]
     */
-    std::string file_path = "../Log/test_util.txt";
+    std::string file_path = "../../../Log/test_util.txt";
     GPData data = read_sparse_gp_data_from_file(file_path, 4, 2, 3, 2, true);
     std::cout << data.m_feature << std::endl;
     std::cout << data.m_output << std::endl;
@@ -98,7 +150,7 @@ void test_with_minimal_data()
 
 void test_with_big_data()
 {
-    std::string file_path = "../Log/test.txt";
+    std::string file_path = "../../../../Log/test.txt";
     GPData data = read_sparse_gp_data_from_file(file_path, 12, 2, 520, 40, true);
     Eigen::RowVectorXd ard_length_scale_ = Eigen::RowVectorXd(12);
     ard_length_scale_ << 2776.7324501710436, 3.247155587332236, 1954.5696329279183, 8.844556482918314, 3113.085020209924, 2649.800377250457, 2918.731746800648, 3090.7772548171697, 3149.4249791237094, 1994.60759481792, 3131.4280971043454, 3.6782262654484428;

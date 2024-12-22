@@ -22,6 +22,8 @@ public:
 
     virtual Eigen::MatrixXd evaluate(const Eigen::MatrixXd & x1, const Eigen::MatrixXd & x2) const = 0;
 
+    virtual Eigen::MatrixXd dk_dx(const Eigen::MatrixXd & x1, const Eigen::MatrixXd & x2) const = 0;
+
 protected:
     kernel_base() = default;
 
