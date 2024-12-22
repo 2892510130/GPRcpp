@@ -5,6 +5,7 @@ body {
 </style>
 
 ## TODO LIST (Clean at 2024.11.12)
+- [ ] Propagete the uncertainty
 - [ ] maybe realtime update model
 - [x] Use the compute and solve in llt
 - [x] Implement FITC method

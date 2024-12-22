@@ -14,7 +14,8 @@ public:
     void fit_with_dtc();
     void fit_with_fitc();
     gpr_results predict(const Eigen::MatrixXd & X_test) override;
-    gpr_results predict(const Eigen::MatrixXd & X_test, const bool & return_cov) override;
+    gpr_results predict(const Eigen::MatrixXd & X_test, bool return_cov) override;
+    Eigen::MatrixXd predict_at_uncertain_input(const Eigen::MatrixXd & X_test, const Eigen::MatrixXd & input_cov) override;
 
 public:
     Eigen::MatrixXd m_inducing_point;

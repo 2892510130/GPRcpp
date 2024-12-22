@@ -188,7 +188,7 @@ gpr_results SparseGPR::predict(const Eigen::MatrixXd & X_test)
     return predict(X_test, false);
 }
 
-gpr_results SparseGPR::predict(const Eigen::MatrixXd & X_test, const bool & return_cov)
+gpr_results SparseGPR::predict(const Eigen::MatrixXd & X_test, bool return_cov)
 {
     if (!has_x_train_)
     {
@@ -220,6 +220,12 @@ gpr_results SparseGPR::predict(const Eigen::MatrixXd & X_test, const bool & retu
         // std::cout << "cov:\n" << results_.y_cov << std::endl;
         return results_;
     }
+}
+
+Eigen::MatrixXd SparseGPR::predict_at_uncertain_input(const Eigen::MatrixXd & X_test, const Eigen::MatrixXd & input_cov)
+{
+   Eigen::MatrixXd test =  Eigen::MatrixXd::Zero(1, 1);
+   return test;
 }
 
 SparseGPR::~SparseGPR()

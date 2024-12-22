@@ -30,7 +30,9 @@ public:
     
     virtual gpr_results predict(const Eigen::MatrixXd & X_test) = 0;
 
-    virtual gpr_results predict(const Eigen::MatrixXd & X_test, const bool & return_cov) = 0;
+    virtual gpr_results predict(const Eigen::MatrixXd & X_test, bool return_cov) = 0;
+
+    virtual Eigen::MatrixXd predict_at_uncertain_input(const Eigen::MatrixXd & X_test, const Eigen::MatrixXd & input_cov) = 0;
 
 public:
     std::shared_ptr<kernel_base> kernel_;

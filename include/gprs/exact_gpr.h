@@ -12,7 +12,8 @@ public:
     void fit(const Eigen::MatrixXd & X_train, const Eigen::MatrixXd & y_train) override;
     void fit(const Eigen::MatrixXd & X_train, const Eigen::MatrixXd & y_train, const Eigen::MatrixXd & inducing_points) override;
     gpr_results predict(const Eigen::MatrixXd & X_test) override;
-    gpr_results predict(const Eigen::MatrixXd & X_test, const bool & return_cov) override;
+    gpr_results predict(const Eigen::MatrixXd & X_test, bool return_cov) override;
+    Eigen::MatrixXd predict_at_uncertain_input(const Eigen::MatrixXd & X_test, const Eigen::MatrixXd & input_cov) override;
 
 public:
     Eigen::MatrixXd m_inducing_point;

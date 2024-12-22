@@ -50,7 +50,7 @@ void ExactGPR::fit(const Eigen::MatrixXd & X_train, const Eigen::MatrixXd & y_tr
     // std::cout << "K * L_ - y_train(should near zero):\n" << K * Alpha_ - y_train << std::endl;
 }
 
-gpr_results ExactGPR::predict(const Eigen::MatrixXd & X_test, const bool & return_cov)
+gpr_results ExactGPR::predict(const Eigen::MatrixXd & X_test, bool return_cov)
 {
     if (!has_x_train_)
     {
@@ -90,6 +90,12 @@ gpr_results ExactGPR::predict(const Eigen::MatrixXd & X_test, const bool & retur
 gpr_results ExactGPR::predict(const Eigen::MatrixXd & X_test)
 {
     return predict(X_test, false);
+}
+
+Eigen::MatrixXd ExactGPR::predict_at_uncertain_input(const Eigen::MatrixXd & X_test, const Eigen::MatrixXd & input_cov)
+{
+   Eigen::MatrixXd test =  Eigen::MatrixXd::Zero(1, 1);
+   return test;
 }
 
 ExactGPR::~ExactGPR()

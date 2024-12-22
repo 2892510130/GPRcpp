@@ -9,6 +9,43 @@
 
 using namespace GPRcpp;
 
+void test_uncertainty_propagation();
+
+void test_with_minimal_data();
+
+void test_with_big_data();
+
+int main(int argc, char *argv[]) 
+{
+    if (atoi(argv[1]) == 0)
+    {
+        test_with_minimal_data();
+    }
+    else if (atoi(argv[1]) == 1)
+    {
+        test_with_big_data();
+    }
+    else if (atoi(argv[1]) == 2)
+    {
+        test_uncertainty_propagation();
+    }
+
+    return 0;
+}
+
+/*
+Test data for the sparse var DTC method is:
+0.1 0.2 0.3 0.4 -0.5 1
+0.5 0.6 0.7 0.8 0.5 2
+0.9 1.0 1.1 1.2 1.5 3
+0.1 0.2 0.3 0.4
+0.5 0.6 0.7 0.8
+*/
+void test_uncertainty_propagation()
+{
+    
+}
+
 void test_with_minimal_data()
 {
     /* In varDTC
@@ -83,26 +120,3 @@ void test_with_big_data()
     std::cout << "\nmean:\n" << result.y_mean.block(0, 0, 16, 1) << std::endl;
     std::cout << "\ncov:\n" << result.y_cov.block(0, 0, 4, 4) << std::endl;
 }
-
-int main(int argc, char *argv[]) 
-{
-    if (atoi(argv[1]) == 0)
-    {
-        test_with_minimal_data();
-    }
-    else
-    {
-        test_with_big_data();
-    }
-
-    return 0;
-}
-
-/*
-Test data for the sparse var DTC method is:
-0.1 0.2 0.3 0.4 -0.5 1
-0.5 0.6 0.7 0.8 0.5 2
-0.9 1.0 1.1 1.2 1.5 3
-0.1 0.2 0.3 0.4
-0.5 0.6 0.7 0.8
-*/
