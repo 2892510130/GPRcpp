@@ -131,7 +131,6 @@ void test_uncertainty_propagation()
     std::shared_ptr<kernel_base> constant_kernel_ptr_2 = std::make_shared<constant_kernel>(0.5);
     std::shared_ptr<kernel_base> real_kernel_3 = std::make_shared<product_kernel>(constant_kernel_ptr_2, rbf_kernel_ptr_2);
     SparseGPR spgp(real_kernel_3, false);
-    spgp.alpha_ = 1e-8;
     spgp.use_ldlt_ = false;
     spgp.inference_method = 1;
     spgp.fit(data.m_feature, data.m_output.col(0), data.m_inducing_points);
@@ -175,7 +174,7 @@ void test_with_minimal_data()
         [0.08797517 0.66390237 0.27234206]
         [0.01259572 0.27234206 2.20820292]]
     */
-    std::string file_path = "../../../Log/test_util.txt";
+    std::string file_path = "C:/Users/pc/Desktop/Personal/Code/GPRcpp/Log/test_util.txt";
     GPData data = read_sparse_gp_data_from_file(file_path, 4, 2, 3, 2, true);
     std::cout << data.m_feature << std::endl;
     std::cout << data.m_output << std::endl;
@@ -193,37 +192,59 @@ void test_with_minimal_data()
     std::shared_ptr<kernel_base> realkernelPtr = std::make_shared<sum_kernel>(realkernelPtr_1, realkernelPtr_2);
 
     SparseGPR spgp(realkernelPtr, false);
-    spgp.alpha_ = 1e-8;
-    spgp.use_ldlt_ = true;
-    spgp.inference_method = 1;
+    // spgp.use_ldlt_ = true;
+    spgp.inference_method = 0;
     spgp.fit(data.m_feature, data.m_output.col(0), data.m_inducing_points);
     auto result = spgp.predict(data.m_feature, true);
 
-    std::cout << "\nmean:\n" << result.y_mean << std::endl;
-    std::cout << "\ncov:\n" << result.y_cov << std::endl;
+    std::cout << "\n[varDTC] mean:\n" << result.y_mean << std::endl;
+    std::cout << "\n[varDTC] cov:\n" << result.y_cov << std::endl;
+
+    SparseGPR spgp_fict(realkernelPtr, false);
+    // spgp.use_ldlt_ = true;
+    spgp_fict.inference_method = 1;
+    spgp_fict.fit(data.m_feature, data.m_output.col(0), data.m_inducing_points);
+    auto result_fitc = spgp_fict.predict(data.m_feature, true);
+
+    std::cout << "\n[FITC] mean:\n" << result_fitc.y_mean << std::endl;
+    std::cout << "\n[FITC] cov:\n" << result_fitc.y_cov << std::endl;
 }
 
-void test_with_big_data()
+void test_with_big_data() // TODO: BUG here with use ldlt
 {
-    std::string file_path = "../../../../Log/test.txt";
-    GPData data = read_sparse_gp_data_from_file(file_path, 12, 2, 520, 40, true);
+    std::string file_path = "C:/Users/pc/Desktop/Personal/Code/GPRcpp/Log/gazebo1.txt";
+    GPData data = read_sparse_gp_data_from_file(file_path, 12, 2, 291, 40, true);
     Eigen::RowVectorXd ard_length_scale_ = Eigen::RowVectorXd(12);
-    ard_length_scale_ << 2776.7324501710436, 3.247155587332236, 1954.5696329279183, 8.844556482918314, 3113.085020209924, 2649.800377250457, 2918.731746800648, 3090.7772548171697, 3149.4249791237094, 1994.60759481792, 3131.4280971043454, 3.6782262654484428;
-    std::shared_ptr<kernel_base> constant_kernel_ptr_1 = std::make_shared<constant_kernel>(7891.7937052127345);
-    std::shared_ptr<kernel_base> constant_kernel_ptr_2 = std::make_shared<constant_kernel>(5.562684646268137e-309);
+    ard_length_scale_ << 100.017, 44.7549, 14.9609, 54.1276, 0.080009, 48.3174, 100.014, 100.496, 45.3872, 68.301, 16.327, 57.2148;
+    std::shared_ptr<kernel_base> constant_kernel_ptr_1 = std::make_shared<constant_kernel>(1.41831);
+    std::shared_ptr<kernel_base> constant_kernel_ptr_2 = std::make_shared<constant_kernel>(1.21955e-11);
     std::shared_ptr<kernel_base> rbf_kernel_ptr_1 = std::make_shared<rbf_kernel>(ard_length_scale_);
-    std::shared_ptr<kernel_base> rbf_kernel_ptr_2 = std::make_shared<rbf_kernel>(7.657695755181217);
+    std::shared_ptr<kernel_base> rbf_kernel_ptr_2 = std::make_shared<rbf_kernel>(0.0101869);
     std::shared_ptr<kernel_base> realkernelPtr_1 = std::make_shared<product_kernel>(constant_kernel_ptr_1, rbf_kernel_ptr_1);
     std::shared_ptr<kernel_base> realkernelPtr_2 = std::make_shared<product_kernel>(constant_kernel_ptr_2, rbf_kernel_ptr_2);
     std::shared_ptr<kernel_base> realkernelPtr = std::make_shared<sum_kernel>(realkernelPtr_1, realkernelPtr_2);
-    SparseGPR spgp(realkernelPtr, false);
-    spgp.alpha_ = 1e-8;
-    // 0.27325828172487143, 5.562684646268137e-309, 7.657695755181217, 7891.7937052127345, 2776.7324501710436, 3.247155587332236, 1954.5696329279183, 8.844556482918314, 3113.085020209924, 2649.800377250457, 2918.731746800648, 3090.7772548171697, 3149.4249791237094, 1994.60759481792, 3131.4280971043454, 3.6782262654484428
-    spgp.likelihood_varience = 0.27325828172487143;
+    SparseGPR spgp(realkernelPtr, true);
+    spgp.likelihood_varience = 0.33669;
     spgp.inference_method = 0;
+    // spgp.use_ldlt_ = true;
     spgp.fit(data.m_feature, data.m_output.col(1), data.m_inducing_points_additional);
     auto result = spgp.predict(data.m_feature, true);
 
+    ExactGPR egp(realkernelPtr, true);
+    egp.fit(data.m_feature, data.m_output.col(1));
+    auto result2 = egp.predict(data.m_feature, true);
+
+    auto params = spgp.kernel_->get_params();
+    std::cout << "gpr_w params are: ";
+    for (auto p: params) std::cout << p << ", ";
+    std::cout << spgp.likelihood_varience << std::endl;
+
+    std::cout << realkernelPtr->evaluate(data.m_feature.row(0), data.m_feature.row(1)) << std::endl;
+
     std::cout << "\nmean:\n" << result.y_mean.block(0, 0, 16, 1) << std::endl;
     std::cout << "\ncov:\n" << result.y_cov.block(0, 0, 4, 4) << std::endl;
+
+    std::cout << "\nexact mean:\n" << result2.y_mean.block(0, 0, 16, 1) << std::endl;
+    std::cout << "\nexact cov:\n" << result2.y_cov.block(0, 0, 4, 4) << std::endl;
 }
+//1.21955e-11 0.0101869 1.41831 100.017 44.7549 14.9609 54.1276 0.080009 48.3174 100.014 100.496 45.3872 68.301 16.327 57.2148
