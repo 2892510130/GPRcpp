@@ -226,7 +226,7 @@ void test_with_big_data() // TODO: BUG here with use ldlt
     SparseGPR spgp(realkernelPtr, true);
     spgp.likelihood_varience = 0.33669;
     spgp.inference_method = 0;
-    // spgp.use_ldlt_ = true;
+    spgp.use_ldlt_ = true;
     spgp.fit(data.m_feature, data.m_output.col(1), data.m_inducing_points_additional);
     auto result = spgp.predict(data.m_feature, true);
 
