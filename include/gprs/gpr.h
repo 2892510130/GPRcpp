@@ -9,6 +9,7 @@ struct gpr_results
 {
     Eigen::VectorXd y_mean;
     Eigen::MatrixXd y_cov;
+    Eigen::MatrixXd y_covariance;
 };
 
 
@@ -32,7 +33,9 @@ public:
 
     virtual gpr_results predict(const Eigen::MatrixXd & X_test, bool return_cov) = 0;
 
-    virtual gpr_results predict_at_uncertain_input(const Eigen::MatrixXd & X_test, Eigen::MatrixXd & input_cov) = 0;
+    virtual gpr_results predict_at_uncertain_input(const Eigen::MatrixXd & X_test, const Eigen::MatrixXd & input_cov) = 0;
+
+    virtual gpr_results predict_at_uncertain_input(const Eigen::MatrixXd & X_test, const Eigen::MatrixXd & input_cov, bool add_covariance, bool add_second_order_variance) = 0;
 
 public:
     std::shared_ptr<kernel_base> kernel_;

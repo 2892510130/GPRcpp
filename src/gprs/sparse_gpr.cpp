@@ -222,9 +222,14 @@ gpr_results SparseGPR::predict(const Eigen::MatrixXd & X_test, bool return_cov)
     }
 }
 
-gpr_results SparseGPR::predict_at_uncertain_input(const Eigen::MatrixXd & X_test, Eigen::MatrixXd & input_cov)
+gpr_results SparseGPR::predict_at_uncertain_input(const Eigen::MatrixXd & X_test, const Eigen::MatrixXd & input_cov)
 {
-   gpr_results certain_predict = predict(X_test);
+   return predict_at_uncertain_input(X_test, input_cov, false, false);
+}
+
+gpr_results SparseGPR::predict_at_uncertain_input(const Eigen::MatrixXd & X_test, const Eigen::MatrixXd & input_cov, bool add_covariance, bool add_second_order_variance)
+{
+    gpr_results certain_predict = predict(X_test);
    return certain_predict;
 }
 

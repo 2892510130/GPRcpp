@@ -9,6 +9,8 @@
 
 using namespace GPRcpp;
 
+void update_cov(Eigen::MatrixXd & cov_before, double new_cov, bool update_covarianceconst, const Eigen::MatrixXd & covariance);
+
 void test_uncertainty_propagation();
 
 void test_with_minimal_data();
@@ -44,6 +46,30 @@ Test data for the sparse var DTC method is:
 0.1 0.2 0.3 0.4
 0.5 0.6 0.7 0.8
 */
+void update_cov(Eigen::MatrixXd & cov_before, double new_cov, bool update_covariance, const Eigen::MatrixXd & covariance)
+{
+    if (update_covariance)
+    {
+        const Eigen::MatrixXd cov_block = cov_before.block(0, 0, cov_before.rows() - 1, cov_before.cols() - 1);
+        cov_before.block(1, 1, cov_before.rows() - 1, cov_before.cols() - 1).noalias() = cov_block;
+        cov_before(0, 0) = new_cov;
+
+        for (int i = 1; i < cov_before.rows(); i++)
+        {
+            cov_before(0, i) = covariance(i-1);
+            cov_before(i, 0) = covariance(i-1);
+        }
+    }
+    else
+    {
+        for (int i = cov_before.rows() - 1; i > 0; --i) {
+            cov_before(i, i) = cov_before(i - 1, i - 1);
+        }
+        cov_before(0, 0) = new_cov;
+    }
+}
+
+
 void test_uncertainty_propagation()
 {
     std::string file_path = "C:\\Users\\pc\\Desktop\\Personal\\Code\\GPRcpp\\Log\\test_util.txt";
@@ -76,23 +102,29 @@ void test_uncertainty_propagation()
 
     gpr.fit(data.m_feature, data.m_output.col(0));
 
-    Eigen::MatrixXd cov_before = Eigen::MatrixXd::Identity(data.m_feature.cols(), data.m_feature.cols());
+    Eigen::MatrixXd cov_before = Eigen::MatrixXd::Zero(data.m_feature.cols(), data.m_feature.cols());
+    bool update_covariance = true;
 
-    auto result_1 = gpr.predict_at_uncertain_input(data.m_feature.row(0), cov_before);
+    auto result_1 = gpr.predict_at_uncertain_input(data.m_feature.row(0), cov_before, update_covariance, false);
+    update_cov(cov_before, result_1.y_cov(0, 0), update_covariance, result_1.y_covariance);
     std::cout << "final mean:\n" << result_1.y_mean << std::endl;
     std::cout << "final cov:\n" << result_1.y_cov << std::endl;
     std::cout << "final sigma 1:\n" << cov_before << std::endl;
     
-    gpr.predict_at_uncertain_input(data.m_feature.row(1), cov_before);
+    result_1 = gpr.predict_at_uncertain_input(data.m_feature.row(1), cov_before, update_covariance, false);
+    update_cov(cov_before, result_1.y_cov(0, 0), update_covariance, result_1.y_covariance);
     std::cout << "final sigma 2:\n" << cov_before << std::endl;
 
-    gpr.predict_at_uncertain_input(data.m_feature.row(2), cov_before);
+    result_1 = gpr.predict_at_uncertain_input(data.m_feature.row(2), cov_before, update_covariance, false);
+    update_cov(cov_before, result_1.y_cov(0, 0), update_covariance, result_1.y_covariance);
     std::cout << "final sigma 3:\n" << cov_before << std::endl;
 
-    gpr.predict_at_uncertain_input(data.m_feature.row(1), cov_before);
+    result_1 = gpr.predict_at_uncertain_input(data.m_feature.row(1), cov_before, update_covariance, false);
+    update_cov(cov_before, result_1.y_cov(0, 0), update_covariance, result_1.y_covariance);
     std::cout << "final sigma 4:\n" << cov_before << std::endl;
 
-    gpr.predict_at_uncertain_input(data.m_feature.row(0), cov_before);
+    result_1 = gpr.predict_at_uncertain_input(data.m_feature.row(0), cov_before, update_covariance, false);
+    update_cov(cov_before, result_1.y_cov(0, 0), update_covariance, result_1.y_covariance);
     std::cout << "final sigma 5:\n" << cov_before << std::endl;
 
     gpr.predict_at_uncertain_input(data.m_feature, cov_before); // Will cause error
