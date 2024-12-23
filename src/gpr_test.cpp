@@ -107,27 +107,39 @@ void test_uncertainty_propagation()
 
     auto result_1 = gpr.predict_at_uncertain_input(data.m_feature.row(0), cov_before, update_covariance, false);
     update_cov(cov_before, result_1.y_cov(0, 0), update_covariance, result_1.y_covariance);
-    std::cout << "final mean:\n" << result_1.y_mean << std::endl;
-    std::cout << "final cov:\n" << result_1.y_cov << std::endl;
-    std::cout << "final sigma 1:\n" << cov_before << std::endl;
+    std::cout << "[ExactGPR] final mean:\n" << result_1.y_mean << std::endl;
+    std::cout << "[ExactGPR] final cov:\n" << result_1.y_cov << std::endl;
+    std::cout << "[ExactGPR] final sigma 1:\n" << cov_before << std::endl;
     
     result_1 = gpr.predict_at_uncertain_input(data.m_feature.row(1), cov_before, update_covariance, false);
     update_cov(cov_before, result_1.y_cov(0, 0), update_covariance, result_1.y_covariance);
-    std::cout << "final sigma 2:\n" << cov_before << std::endl;
+    std::cout << "\n[ExactGPR] final sigma 2:\n" << cov_before << std::endl;
 
     result_1 = gpr.predict_at_uncertain_input(data.m_feature.row(2), cov_before, update_covariance, false);
     update_cov(cov_before, result_1.y_cov(0, 0), update_covariance, result_1.y_covariance);
-    std::cout << "final sigma 3:\n" << cov_before << std::endl;
+    std::cout << "\n[ExactGPR] final sigma 3:\n" << cov_before << std::endl;
 
     result_1 = gpr.predict_at_uncertain_input(data.m_feature.row(1), cov_before, update_covariance, false);
     update_cov(cov_before, result_1.y_cov(0, 0), update_covariance, result_1.y_covariance);
-    std::cout << "final sigma 4:\n" << cov_before << std::endl;
+    std::cout << "\n[ExactGPR] final sigma 4:\n" << cov_before << std::endl;
 
     result_1 = gpr.predict_at_uncertain_input(data.m_feature.row(0), cov_before, update_covariance, false);
     update_cov(cov_before, result_1.y_cov(0, 0), update_covariance, result_1.y_covariance);
-    std::cout << "final sigma 5:\n" << cov_before << std::endl;
+    std::cout << "\n[ExactGPR] final sigma 5:\n" << cov_before << std::endl;
 
-    gpr.predict_at_uncertain_input(data.m_feature, cov_before); // Will cause error
+    SparseGPR spgp(real_kernel_2, false);
+    spgp.alpha_ = 1e-8;
+    spgp.use_ldlt_ = false;
+    spgp.inference_method = 1;
+    spgp.fit(data.m_feature, data.m_output.col(0), data.m_inducing_points);
+
+    Eigen::MatrixXd cov_before_sparse = Eigen::MatrixXd::Zero(data.m_feature.cols(), data.m_feature.cols());
+    result_1 = spgp.predict_at_uncertain_input(data.m_feature.row(0), cov_before_sparse, update_covariance, false);
+    update_cov(cov_before_sparse, result_1.y_cov(0, 0), update_covariance, result_1.y_covariance);
+    std::cout << "\n[SparseGPR] final sigma 1:\n" << cov_before_sparse << std::endl;
+
+
+    // gpr.predict_at_uncertain_input(data.m_feature, cov_before); // Will cause error
 }
 
 void test_with_minimal_data()

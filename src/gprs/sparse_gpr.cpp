@@ -229,8 +229,31 @@ gpr_results SparseGPR::predict_at_uncertain_input(const Eigen::MatrixXd & X_test
 
 gpr_results SparseGPR::predict_at_uncertain_input(const Eigen::MatrixXd & X_test, const Eigen::MatrixXd & input_cov, bool add_covariance, bool add_second_order_variance)
 {
-    gpr_results certain_predict = predict(X_test);
-   return certain_predict;
+    if (X_test.rows() != 1) throw std::runtime_error("SparseGPR::predict_at_uncertain_input only support 1 sample input!");
+
+    const Eigen::MatrixXd dk_dx =  kernel_->dk_dx(m_inducing_point, X_test);
+
+    const Eigen::MatrixXd dmu_dx = dk_dx.transpose() * Alpha_;
+
+    const Eigen::MatrixXd first_order_varience = dmu_dx.transpose() * input_cov * dmu_dx;
+
+    gpr_results certain_predict = predict(X_test, true);
+
+    certain_predict.y_cov += first_order_varience;
+
+    if (add_covariance)
+    {
+        certain_predict.y_covariance = dmu_dx.transpose() * input_cov;
+    }
+
+    // std::cout << "[ExactGPR]: dmu_dx.T * input_cov is:\n" << certain_predict.y_covariance << std::endl;
+    // std::cout << "[ExactGPR]: dk_dx is:\n" << dk_dx << std::endl;
+    // std::cout << "[ExactGPR]: Alpha_ is:\n" << Alpha_ << std::endl;
+    // std::cout << "[ExactGPR]: dmu_dx is:\n" << dmu_dx << std::endl;
+    // std::cout << "[ExactGPR]: first_order_varience is:\n" << first_order_varience << std::endl;
+    // std::cout << "[ExactGPR]: exact cov is:\n" << certain_predict.y_cov << std::endl;
+
+    return certain_predict;
 }
 
 SparseGPR::~SparseGPR()
