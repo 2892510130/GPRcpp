@@ -86,8 +86,9 @@ namespace GPRcpp
 
     Eigen::MatrixXd rbf_kernel::dk_dx(const Eigen::MatrixXd & x1, const Eigen::MatrixXd & x2) const
     {
-        Eigen::MatrixXd dk_dl_left = (x1 - x2.replicate(x1.rows(), 1)).array() / m_length_scale.replicate(x1.rows(), 1).array().square();
-
+        Eigen::MatrixXd dk_dl_left;
+        if (m_ard) dk_dl_left = (x1 - x2.replicate(x1.rows(), 1)).array() / m_length_scale.replicate(x1.rows(), 1).array().square();
+        else dk_dl_left = (x1 - x2.replicate(x1.rows(), 1)) / params_[0];
         // std::cout << "History data:" << std::endl;
         // std::cout << x1 << std::endl;
         // std::cout << "New data:" << std::endl;

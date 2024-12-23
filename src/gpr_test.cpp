@@ -127,7 +127,10 @@ void test_uncertainty_propagation()
     update_cov(cov_before, result_1.y_cov(0, 0), update_covariance, result_1.y_covariance);
     std::cout << "\n[ExactGPR] final sigma 5:\n" << cov_before << std::endl;
 
-    SparseGPR spgp(real_kernel_2, false);
+    std::shared_ptr<kernel_base> rbf_kernel_ptr_2 = std::make_shared<rbf_kernel>(2);
+    std::shared_ptr<kernel_base> constant_kernel_ptr_2 = std::make_shared<constant_kernel>(0.5);
+    std::shared_ptr<kernel_base> real_kernel_3 = std::make_shared<product_kernel>(constant_kernel_ptr_2, rbf_kernel_ptr_2);
+    SparseGPR spgp(real_kernel_3, false);
     spgp.alpha_ = 1e-8;
     spgp.use_ldlt_ = false;
     spgp.inference_method = 1;
@@ -136,7 +139,15 @@ void test_uncertainty_propagation()
     Eigen::MatrixXd cov_before_sparse = Eigen::MatrixXd::Zero(data.m_feature.cols(), data.m_feature.cols());
     result_1 = spgp.predict_at_uncertain_input(data.m_feature.row(0), cov_before_sparse, update_covariance, false);
     update_cov(cov_before_sparse, result_1.y_cov(0, 0), update_covariance, result_1.y_covariance);
+    std::cout << "\n[SparseGPR] mean:\n" << result_1.y_mean << std::endl;
+    std::cout << "\n[SparseGPR] cov:\n" << result_1.y_cov << std::endl;
     std::cout << "\n[SparseGPR] final sigma 1:\n" << cov_before_sparse << std::endl;
+
+    std::shared_ptr<kernel_base> real_kernel_4 = std::make_shared<sum_kernel>(real_kernel_1, real_kernel_3);
+    std::cout << "\n[KernleTest] kernel_2:\n" << real_kernel_2->dk_dx(data.m_inducing_points, data.m_feature.row(0)) << std::endl;
+    std::cout << "\n[KernleTest] kernel_3:\n" << real_kernel_3->dk_dx(data.m_inducing_points, data.m_feature.row(0)) << std::endl;
+    std::cout << "\n[KernleTest] kernel_2+3:\n" << real_kernel_2->dk_dx(data.m_inducing_points, data.m_feature.row(0)) + real_kernel_3->dk_dx(data.m_inducing_points, data.m_feature.row(0)) << std::endl;
+    std::cout << "\n[KernleTest] kernel_4:\n" << real_kernel_4->dk_dx(data.m_inducing_points, data.m_feature.row(0)) << std::endl;
 
 
     // gpr.predict_at_uncertain_input(data.m_feature, cov_before); // Will cause error
