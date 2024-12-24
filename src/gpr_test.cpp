@@ -13,6 +13,8 @@ void update_cov(Eigen::MatrixXd & cov_before, double new_cov, bool update_covari
 
 void test_uncertainty_propagation();
 
+void test_uncertainty_propagation_20_times();
+
 void test_with_minimal_data();
 
 void test_with_big_data();
@@ -33,6 +35,11 @@ int main(int argc, char *argv[])
     {
         std::cout << "You have select uncertainty propagation test!" << std::endl;
         test_uncertainty_propagation();
+    }
+    else if (atoi(argv[1]) == 3)
+    {
+        std::cout << "You have select uncertainty propagation 20 times test!" << std::endl;
+        test_uncertainty_propagation_20_times();
     }
 
     return 0;
@@ -69,6 +76,41 @@ void update_cov(Eigen::MatrixXd & cov_before, double new_cov, bool update_covari
     }
 }
 
+void test_uncertainty_propagation_20_times()
+{
+    std::string file_path = "C:/Users/pc/Desktop/Personal/Code/GPRcpp/Log/gazebo1.txt";
+    GPData data = read_sparse_gp_data_from_file(file_path, 12, 2, 291, 40, true);
+    Eigen::RowVectorXd ard_length_scale_ = Eigen::RowVectorXd(12);
+    ard_length_scale_ << 100.017, 44.7549, 14.9609, 54.1276, 0.080009, 48.3174, 100.014, 100.496, 45.3872, 68.301, 16.327, 57.2148;
+    std::shared_ptr<kernel_base> constant_kernel_ptr_1 = std::make_shared<constant_kernel>(1.41831);
+    std::shared_ptr<kernel_base> constant_kernel_ptr_2 = std::make_shared<constant_kernel>(1.21955e-11);
+    std::shared_ptr<kernel_base> rbf_kernel_ptr_1 = std::make_shared<rbf_kernel>(ard_length_scale_);
+    std::shared_ptr<kernel_base> rbf_kernel_ptr_2 = std::make_shared<rbf_kernel>(0.0101869);
+    std::shared_ptr<kernel_base> realkernelPtr_1 = std::make_shared<product_kernel>(constant_kernel_ptr_1, rbf_kernel_ptr_1);
+    std::shared_ptr<kernel_base> realkernelPtr_2 = std::make_shared<product_kernel>(constant_kernel_ptr_2, rbf_kernel_ptr_2);
+    std::shared_ptr<kernel_base> realkernelPtr = std::make_shared<sum_kernel>(realkernelPtr_1, realkernelPtr_2);
+
+    bool normalize_gpr = true;
+    SparseGPR spgp(realkernelPtr, normalize_gpr);
+    spgp.likelihood_varience = 0.33669;
+    spgp.inference_method = 0;
+    spgp.fit(data.m_feature, data.m_output.col(1), data.m_inducing_points_additional);
+
+    // ExactGPR spgp(realkernelPtr, normalize_gpr);
+    // spgp.fit(data.m_feature, data.m_output.col(1));
+
+    Eigen::MatrixXd cov_before = Eigen::MatrixXd::Zero(data.m_feature.cols(), data.m_feature.cols());
+    bool update_covariance = true;
+
+    GPRcpp::gpr_results result;
+
+    for (int i = 0; i < 40; i++)
+    {
+        result = spgp.predict_at_uncertain_input(data.m_feature.row(i), cov_before, update_covariance, false);
+        update_cov(cov_before, result.y_cov(0, 0), update_covariance, result.y_covariance);
+        std::cout << "\n[ExactGPR] final sigma " << i << ":\n" << cov_before << std::endl;
+    }
+}
 
 void test_uncertainty_propagation()
 {

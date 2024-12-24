@@ -73,7 +73,7 @@ gpr_results ExactGPR::predict(const Eigen::MatrixXd & X_test, bool return_cov)
         if (normalize_y_)
         {
             results_.y_mean = (results_.y_mean.array().rowwise() * y_train_std_.array()).rowwise() + y_train_mean_.array();
-            results_.y_cov = results_.y_cov.array() * y_train_std_(0) * y_train_std_(0); // Only for 1D output.
+            results_.y_cov = results_.y_cov * y_train_std_(0) * y_train_std_(0); // Only for 1D output.
             // In sklearn, for 2D output, the K_trans is the same, the y_cov is just [y_cov * std_1, y_cov * std_2]
         }
 
@@ -105,16 +105,22 @@ gpr_results ExactGPR::predict_at_uncertain_input(const Eigen::MatrixXd & X_test,
 
     const Eigen::MatrixXd dmu_dx = dk_dx.transpose() * Alpha_;
 
-    const Eigen::MatrixXd first_order_varience = dmu_dx.transpose() * input_cov * dmu_dx;
+    double first_order_varience = (dmu_dx.transpose() * input_cov * dmu_dx)(0);
 
     gpr_results certain_predict = predict(X_test, true);
-
-    certain_predict.y_cov += first_order_varience;
 
     if (add_covariance)
     {
         certain_predict.y_covariance = dmu_dx.transpose() * input_cov;
     }
+
+    if (normalize_y_)
+    {
+        first_order_varience = first_order_varience * y_train_std_(0) * y_train_std_(0); // Only for 1D output.
+        certain_predict.y_covariance = certain_predict.y_covariance * y_train_std_(0) * y_train_std_(0);
+    }
+
+    certain_predict.y_cov(0, 0) += first_order_varience;
 
     // std::cout << "[ExactGPR]: dmu_dx.T * input_cov is:\n" << certain_predict.y_covariance << std::endl;
     // std::cout << "[ExactGPR]: dk_dx is:\n" << dk_dx << std::endl;
