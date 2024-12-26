@@ -6,6 +6,7 @@
 #include "gprs/exact_gpr.h"
 #include "utils/file_operation.h"
 #include <chrono>
+#include <cmath>
 
 using namespace GPRcpp;
 
@@ -17,7 +18,7 @@ void test_uncertainty_propagation_20_times();
 
 void test_with_minimal_data();
 
-void test_with_big_data();
+void test_with_big_data(int iteration);
 
 int main(int argc, char *argv[]) 
 {
@@ -29,7 +30,7 @@ int main(int argc, char *argv[])
     else if (atoi(argv[1]) == 1)
     {
         std::cout << "You have select big data test!" << std::endl;
-        test_with_big_data();
+        test_with_big_data(atoi(argv[2]));
     }
     else if (atoi(argv[1]) == 2)
     {
@@ -104,10 +105,11 @@ void test_uncertainty_propagation_20_times()
 
     GPRcpp::gpr_results result;
 
-    for (int i = 0; i < 40; i++)
+    for (int i = 0; i < 10; i++)
     {
         result = spgp.predict_at_uncertain_input(data.m_feature.row(i), cov_before, update_covariance, false);
-        update_cov(cov_before, result.y_cov(0, 0), update_covariance, result.y_covariance);
+        double new_cov = result.y_cov(0, 0) + 1 * cov_before(0 , 0);
+        update_cov(cov_before, new_cov, update_covariance, result.y_covariance);
         std::cout << "\n[ExactGPR] final sigma " << i << ":\n" << cov_before << std::endl;
     }
 }
@@ -252,7 +254,7 @@ void test_with_minimal_data()
     std::cout << "\n[FITC] cov:\n" << result_fitc.y_cov << std::endl;
 }
 
-void test_with_big_data() // TODO: BUG here with use ldlt
+void test_with_big_data(int iteration) // TODO: BUG here with use ldlt
 {
     std::string file_path = "C:/Users/pc/Desktop/Personal/Code/GPRcpp/Log/gazebo1.txt";
     GPData data = read_sparse_gp_data_from_file(file_path, 12, 2, 291, 40, true);
@@ -272,21 +274,33 @@ void test_with_big_data() // TODO: BUG here with use ldlt
     spgp.fit(data.m_feature, data.m_output.col(1), data.m_inducing_points_additional);
     auto result = spgp.predict(data.m_feature, true);
 
-    ExactGPR egp(realkernelPtr, true);
-    egp.fit(data.m_feature, data.m_output.col(1));
-    auto result2 = egp.predict(data.m_feature, true);
-
     auto params = spgp.kernel_->get_params();
     std::cout << "gpr_w params are: ";
     for (auto p: params) std::cout << p << ", ";
     std::cout << spgp.likelihood_varience << std::endl;
 
-    std::cout << realkernelPtr->evaluate(data.m_feature.row(0), data.m_feature.row(1)) << std::endl;
+    std::cout << "\nsparse mean:\n" << result.y_mean.block(0, 0, 4, 1) << std::endl;
+    std::cout << "\nsparse cov:\n" << result.y_cov.block(0, 0, 4, 4) << std::endl;
 
-    std::cout << "\nmean:\n" << result.y_mean.block(0, 0, 16, 1) << std::endl;
-    std::cout << "\ncov:\n" << result.y_cov.block(0, 0, 4, 4) << std::endl;
-
-    std::cout << "\nexact mean:\n" << result2.y_mean.block(0, 0, 16, 1) << std::endl;
+    // ----------- A big data test ----------- //
+    std::cout << "\n----------- A big data test -----------\n";
+    ExactGPR egp(realkernelPtr, true);
+    egp.use_ldlt_ = true;
+    egp.fit(data.m_feature, data.m_output.col(1));
+    auto result2 = egp.predict(data.m_feature, true);
+    std::cout << "\nexact mean:\n" << result2.y_mean.block(0, 0, 4, 1) << std::endl;
     std::cout << "\nexact cov:\n" << result2.y_cov.block(0, 0, 4, 4) << std::endl;
+
+    auto start_time = std::chrono::high_resolution_clock::now();
+
+    for (int i = 0; i < iteration; i++)
+    {
+        const int index = std::min((long long)i, data.m_feature.rows() - 1);
+        result2 = egp.predict(data.m_feature.row(index), true);
+    }
+
+    auto end_time = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time).count();
+
+    std::cout << "\ncost time: " << duration << " us" << std::endl;
 }
-//1.21955e-11 0.0101869 1.41831 100.017 44.7549 14.9609 54.1276 0.080009 48.3174 100.014 100.496 45.3872 68.301 16.327 57.2148

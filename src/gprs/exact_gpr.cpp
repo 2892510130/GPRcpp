@@ -28,12 +28,18 @@ void ExactGPR::fit(const Eigen::MatrixXd & X_train, const Eigen::MatrixXd & y_tr
     auto K = kernel_->evaluate(X_train_);
     K += Eigen::MatrixXd::Identity(K.rows(), K.cols()) * alpha_;
 
+    // How to use ldlt to get answer same as llt: Alpha is the same process. As for L_,
+    // in exact gpr the only useage is to get k_trans * K^(-1) * k_trans^T by 
+    // (L_^(-1) * K_trans^T)^T * (L_^(-1) * K_trans^T) -> J^T * J. So for ldlt
+    // J = D^(-1/2) * L^(-1) * P * K_trans^T. L_ = L * D^(1/2).
+    // The speed compare: llt is 1.2x ~ 1.5x faster than ldlt
     if (use_ldlt_)
     {
         Eigen::LDLT<Eigen::MatrixXd> Lm_LLT = K.ldlt();
         Eigen::MatrixXd L1 = Lm_LLT.matrixL();
         Eigen::MatrixXd D1 = Lm_LLT.vectorD().cwiseSqrt();  // D 的平方根
-        Eigen::MatrixXd L_ = Lm_LLT.transpositionsP() *  L1 * D1.asDiagonal().toDenseMatrix();
+        L_ = L1 * D1.asDiagonal();
+        m_P = Lm_LLT.transpositionsP();
         Alpha_ = Lm_LLT.solve(y_train_);
     }
     else
@@ -66,7 +72,9 @@ gpr_results ExactGPR::predict(const Eigen::MatrixXd & X_test, bool return_cov)
 
         if (return_cov)
         {
-            Eigen::MatrixXd V = L_.triangularView<Eigen::Lower>().solve(K_trans.transpose());
+            Eigen::MatrixXd V;
+            if (use_ldlt_) V = L_.triangularView<Eigen::Lower>().solve(m_P * K_trans.transpose());
+            else V = L_.triangularView<Eigen::Lower>().solve(K_trans.transpose());
             results_.y_cov = kernel_->evaluate(X_test) - V.transpose() * V;
         }
 

@@ -53,11 +53,9 @@ print("real_kernel_x:\n", real_kernel_x)
 model = GPy.models.GPRegression(x, y, kernel=real_kernel, noise_var=0.0)
 print(model)
 
-# # 打印模型信息
 # print("\n----------GPR model----------")
 # print(model)
 
-# 训练并预测
 # model.optimize(messages=True)
 mu, var = model.predict(x, full_cov=True, include_likelihood=False) # include_likelihood=False will not include likehood variance into the predict var
 
@@ -65,7 +63,6 @@ print("\n----------GPR predict test----------")
 print("mu:\n", mu)
 print("cov:\n", var)
 
-# 使用 normalize_y 参数进行标准化预测
 model_normalized = GPy.models.GPRegression(x, y, kernel=real_kernel, normalizer=True, noise_var=0.0)
 # model_normalized.optimize(messages=True)
 mu_normalized, var_normalized = model_normalized.predict(x, full_cov=True, include_likelihood=False)
