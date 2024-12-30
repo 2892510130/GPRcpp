@@ -285,9 +285,11 @@ void test_with_big_data(int iteration) // TODO: BUG here with use ldlt
     // ----------- A big data test ----------- //
     std::cout << "\n----------- A big data test -----------\n";
     ExactGPR egp(realkernelPtr, true);
-    egp.use_ldlt_ = true;
+    // egp.use_ldlt_ = true;
     egp.fit(data.m_feature, data.m_output.col(1));
     auto result2 = egp.predict(data.m_feature, true);
+    // egp.fit(data.m_feature.block(0, 0, 120, 12), data.m_output.block(0, 1, 120, 1));
+    // auto result2 = egp.predict(data.m_feature.block(120, 0, 120, 12), true);
     std::cout << "\nexact mean:\n" << result2.y_mean.block(0, 0, 4, 1) << std::endl;
     std::cout << "\nexact cov:\n" << result2.y_cov.block(0, 0, 4, 4) << std::endl;
 
@@ -302,5 +304,6 @@ void test_with_big_data(int iteration) // TODO: BUG here with use ldlt
     auto end_time = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time).count();
 
+    std::cout << "\nsize of matrix element: " << sizeof(result2.y_cov(0, 0)) << " us" << std::endl;
     std::cout << "\ncost time: " << duration << " us" << std::endl;
 }
