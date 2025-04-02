@@ -57,7 +57,7 @@ void ExactGPR::fit(const Eigen::MatrixXd & X_train, const Eigen::MatrixXd & y_tr
         // std::cout << "K cond: " << LLT_.solve(Eigen::MatrixXd::Identity(K.rows(), K.cols())).norm() * K.norm() << std::endl; // 4e11
         // std::cout << "K_inv ldlt error: " << (Lm_LLT.solve(Eigen::MatrixXd::Identity(K.rows(), K.cols())) * K).squaredNorm() << std::endl;
         Eigen::EigenSolver<Eigen::MatrixXd> solver(K);
-        std::cout << "Eigenvalues: \n" << solver.eigenvalues() << std::endl;
+        // std::cout << "Eigenvalues: \n" << solver.eigenvalues() << std::endl;
     }
 
     // For debug

@@ -48,6 +48,7 @@ namespace GPRcpp
         dist = exp(-0.5 * dist.array());
         Eigen::MatrixXd k = squareform(dist, x1.rows());
         return k + Eigen::MatrixXd::Identity(x1.rows(), x1.rows());
+        return dist;
     }
 
     Eigen::MatrixXd rbf_kernel::evaluate(const Eigen::MatrixXd & x1, const Eigen::MatrixXd & x2) const

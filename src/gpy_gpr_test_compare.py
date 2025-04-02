@@ -55,3 +55,8 @@ sparse_model.parameters_changed()
 mu, var = sparse_model.predict(train_data[:, :12], full_cov=True, include_likelihood=False)
 print("sparse mu:\n", mu[:4].T)
 print("sparse cov:\n", var[:4, :4])
+
+
+mu, var2 = sparse_model.predict(train_data[:, :12], full_cov=True)
+print("Add the likelihood\n", var2 - var)
+print(sparse_model.likelihood.variance)

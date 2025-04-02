@@ -27,6 +27,13 @@ namespace GPRcpp
             }
         }
 
+        // Eigen::MatrixXd Xsq = x1.rowwise().squaredNorm();
+        // Eigen::MatrixXd dist_ = -2.0 * (x1 * x1.transpose());
+        // dist_.array() += Xsq.array();
+        // dist_.array() += Xsq.array().transpose();
+        // dist_ = (dist_.array() < 0).select(0, dist_);
+        // std::cout << dist_.rows() << ", " << dist_.cols() << std::endl;
+
         return dist_;
     }
 

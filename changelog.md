@@ -5,13 +5,8 @@ body {
 </style>
 
 ## TODO LIST (Clean at 2024.11.12)
-- [ ] gpr_test.cpp test_with_big_data function bug with ldlt
-- [x] Propagete the uncertainty.
-- [ ] Propagete the covariance using equation 35 in reference [1].
+- [ ] optimize the dist calc in gpr with Gpy approach
 - [ ] maybe realtime update model
-- [x] Use the compute and solve in llt
-- [x] Implement FITC method
-- [x] Make it good for graduation project
 
 ## Change Log
 - 2024.12.23: 
