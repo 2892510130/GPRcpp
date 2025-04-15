@@ -20,6 +20,8 @@ void test_with_minimal_data();
 
 void test_with_big_data(int iteration);
 
+void test_for_py_simulator();
+
 int main(int argc, char *argv[]) 
 {
     if (atoi(argv[1]) == 0)
@@ -42,8 +44,66 @@ int main(int argc, char *argv[])
         std::cout << "You have select uncertainty propagation 20 times test!" << std::endl;
         test_uncertainty_propagation_20_times();
     }
+	else if (atoi(argv[1]) == 4)
+    {
+        std::cout << "You have select py simulator test!" << std::endl;
+        test_for_py_simulator();
+    }
 
     return 0;
+}
+
+void test_for_py_simulator()
+{
+    std::string file_path = "C:/Users/pc/Desktop/Personal/Code/GPRcpp/Log/py.txt";
+    GPData data = read_sparse_gp_data_from_file(file_path, 12, 2, 137, 40, true);
+    Eigen::RowVectorXd ard_length_scale_ = Eigen::RowVectorXd(12);
+
+    ard_length_scale_ << 118.18658697027465, 3.999845928230718, 203.6945212838879, 25.033352445029244, 129.86246942369885, 144.36921768120308, 245.48204971071883, 199.9269221418368, 149.3835101100147, 3.936029099638809, 242.69650887841993, 61.29558624860282;
+    std::shared_ptr<kernel_base> constant_kernel_ptr_1 = std::make_shared<constant_kernel>(264.8190805521772);
+    std::shared_ptr<kernel_base> rbf_kernel_ptr_1 = std::make_shared<rbf_kernel>(ard_length_scale_);
+	std::shared_ptr<kernel_base> my_kernel = std::make_shared<product_kernel>(constant_kernel_ptr_1, rbf_kernel_ptr_1);
+
+    bool normalize_gpr = true;
+    SparseGPR spgp(my_kernel, normalize_gpr);
+    spgp.likelihood_varience = 0.005021728129430243;
+    spgp.inference_method = 0;
+    spgp.fit(data.m_feature, data.m_output.col(1), data.m_inducing_points_additional);
+	
+
+    // ExactGPR spgp(realkernelPtr, normalize_gpr);
+    // spgp.fit(data.m_feature, data.m_output.col(1));
+
+    Eigen::MatrixXd cov_before = Eigen::MatrixXd::Zero(data.m_feature.cols(), data.m_feature.cols());
+    bool update_covariance = true;
+
+	Eigen::RowVectorXd test = Eigen::RowVectorXd(12);
+	Eigen::RowVectorXd test2 = Eigen::RowVectorXd(12);
+	test << 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0;
+	test2 << 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1;
+	auto dk_dx = my_kernel->dk_dx(spgp.m_inducing_point, test);
+	auto result = spgp.predict(test, true);
+	// std::cout << "dk_dx:\n" << dk_dx << '\n';
+	auto py_result = spgp.predict_at_uncertain_input(test, cov_before, update_covariance, false);
+	std::cout << "cov at empty input:\n" << py_result.y_cov << '\n';
+	cov_before(0, 0) = 0.00030128;
+	cov_before(1, 1) = 0.00015846;
+	test(0) = -0.00097084;
+	test(1) = -0.00054445;
+	py_result = spgp.predict_at_uncertain_input(test, cov_before, update_covariance, false);
+	std::cout << "cov at 1:\n" << py_result.y_cov << '\n';
+	
+	/*
+    GPRcpp::gpr_results result;
+
+    for (int i = 0; i < 10; i++)
+    {
+        result = spgp.predict_at_uncertain_input(data.m_feature.row(i), cov_before, update_covariance, false);
+        double new_cov = result.y_cov(0, 0) + 1 * cov_before(0 , 0);
+        update_cov(cov_before, new_cov, update_covariance, result.y_covariance);
+        std::cout << "\n[ExactGPR] final sigma " << i << ":\n" << cov_before << std::endl;
+    }
+	*/
 }
 
 /*

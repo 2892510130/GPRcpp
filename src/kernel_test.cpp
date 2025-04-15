@@ -133,6 +133,9 @@ int main(int argc, char *argv[])
     std::cout << "gpr predict mean:\n" << predict_normalized.y_mean.transpose() << std::endl;
     std::cout << "gpr predict cov:\n" << predict_normalized.y_cov << std::endl;
 
-
+    Eigen::MatrixXd tt = Eigen::MatrixXd(1, 8);
+    tt << 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0;
+    tt.block(0, 0, 1, 6) = tt.block(0, 2, 1, 8);
+    std::cout << "Random test:\n" << tt << '\n';
     return 0;
 }
