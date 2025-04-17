@@ -10,6 +10,7 @@ struct gpr_results
     Eigen::VectorXd y_mean;
     Eigen::MatrixXd y_cov;
     Eigen::MatrixXd y_covariance;
+    Eigen::MatrixXd dmu_dx;
 };
 
 

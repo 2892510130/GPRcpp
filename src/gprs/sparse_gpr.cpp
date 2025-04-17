@@ -218,17 +218,17 @@ gpr_results SparseGPR::predict_at_uncertain_input(const Eigen::MatrixXd & X_test
 {
     if (X_test.rows() != 1) throw std::runtime_error("SparseGPR::predict_at_uncertain_input only support 1 sample input!");
 
+    gpr_results certain_predict = predict(X_test, true);
+
     const Eigen::MatrixXd dk_dx =  kernel_->dk_dx(m_inducing_point, X_test);
 
-    const Eigen::MatrixXd dmu_dx = dk_dx.transpose() * Alpha_;
+    certain_predict.dmu_dx = dk_dx.transpose() * Alpha_;
 
-    double first_order_varience = (dmu_dx.transpose() * input_cov * dmu_dx)(0);
-
-    gpr_results certain_predict = predict(X_test, true);
+    double first_order_varience = (certain_predict.dmu_dx.transpose() * input_cov * certain_predict.dmu_dx)(0);
 
     if (add_covariance)
     {
-        certain_predict.y_covariance = dmu_dx.transpose() * input_cov;
+        certain_predict.y_covariance = certain_predict.dmu_dx.transpose() * input_cov;
     }
 
     if (normalize_y_)
