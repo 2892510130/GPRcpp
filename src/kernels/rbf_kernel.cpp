@@ -39,8 +39,8 @@ namespace GPRcpp
     Eigen::MatrixXd rbf_kernel::evaluate(const Eigen::MatrixXd & x1) const
     {
         auto dist_calc = distance_calculator(distance_type::euclidean);
-        // std::cout << "x1:\n" << x1 << std::endl;
-        // std::cout << "params_:\n" << params_[0] << std::endl;
+        // std::cout << "x1:\n" << x1 << '\n';
+        // std::cout << "params_:\n" << params_[0] << '\n';
         Eigen::MatrixXd dist;
         if (m_ard) dist = dist_calc.compute(x1.array() / m_length_scale.replicate(x1.rows(), 1).array());
         else dist = dist_calc.compute(x1 / params_[0]);
@@ -90,20 +90,20 @@ namespace GPRcpp
         Eigen::MatrixXd dk_dl_left;
         if (m_ard) dk_dl_left = (x1 - x2.replicate(x1.rows(), 1)).array() / m_length_scale.replicate(x1.rows(), 1).array().square();
         else dk_dl_left = (x1 - x2.replicate(x1.rows(), 1)) / params_[0];
-        // std::cout << "History data:" << std::endl;
-        // std::cout << x1 << std::endl;
-        // std::cout << "New data:" << std::endl;
-        // std::cout << x2 << std::endl;
-        // std::cout << "dk_dl without lengthscale" << std::endl;
-        // std::cout << x1 - x2.replicate(x1.rows(), 1) << std::endl;
-        // std::cout << "Length scale:" << std::endl;
-        // std::cout << m_length_scale << std::endl;
-        // std::cout << "dk_dl_left" << std::endl;
-        // std::cout << dk_dl_left << std::endl;
-        // std::cout << "dk_dl_right" << std::endl;
-        // std::cout << evaluate(x1, x2).replicate(1, x2.cols()).array() << std::endl;
-        // std::cout << "dk_dl" << std::endl;
-        // std::cout << dk_dl_left.array() * evaluate(x1, x2).replicate(1, x2.cols()).array() << std::endl;
+        // std::cout << "History data:" << '\n';
+        // std::cout << x1 << '\n';
+        // std::cout << "New data:" << '\n';
+        // std::cout << x2 << '\n';
+        // std::cout << "dk_dl without lengthscale" << '\n';
+        // std::cout << x1 - x2.replicate(x1.rows(), 1) << '\n';
+        // std::cout << "Length scale:" << '\n';
+        // std::cout << m_length_scale << '\n';
+        // std::cout << "dk_dl_left" << '\n';
+        // std::cout << dk_dl_left << '\n';
+        // std::cout << "dk_dl_right" << '\n';
+        // std::cout << evaluate(x1, x2).replicate(1, x2.cols()).array() << '\n';
+        // std::cout << "dk_dl" << '\n';
+        // std::cout << dk_dl_left.array() * evaluate(x1, x2).replicate(1, x2.cols()).array() << '\n';
 
         return dk_dl_left.array() * evaluate(x1, x2).replicate(1, x2.cols()).array();
     }

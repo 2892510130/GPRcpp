@@ -7,13 +7,13 @@ namespace GPRcpp
 
 void ExactGPR::fit(const Eigen::MatrixXd & X_train, const Eigen::MatrixXd & y_train, const Eigen::MatrixXd & inducing_points)
 {
-    std::cout << "<!!!! It is exact GPR, please use fit function without inducing points !!!!>" << std::endl;
+    std::cout << "<!!!! It is exact GPR, please use fit function without inducing points !!!!>" << '\n';
     throw std::runtime_error("Not implemented");
 }
 
 void ExactGPR::fit(const Eigen::MatrixXd & X_train, const Eigen::MatrixXd & y_train)
 {
-    std::cout << "<***** Fitting GPR *****>" << std::endl;
+    std::cout << "<***** Fitting GPR *****>" << '\n';
     has_x_train_ = true;
     X_train_ = X_train;
     y_train_ = y_train;
@@ -33,12 +33,12 @@ void ExactGPR::fit(const Eigen::MatrixXd & X_train, const Eigen::MatrixXd & y_tr
     L_ = LLT_.matrixL();
     Alpha_ = LLT_.solve(y_train_);
     Eigen::EigenSolver<Eigen::MatrixXd> solver(K);
-    
+
     // For debug
-    // std::cout << "temp_y decomp:\n" << temp_y.matrix() << std::endl;
-    // std::cout << "Alpha_:\n" << Alpha_ << std::endl;
-    // std::cout << "direct solver answer of K wrt y_train:\n" << K.llt().solve(y_train_) << std::endl;
-    // std::cout << "K * L_ - y_train(should near zero):\n" << K * Alpha_ - y_train << std::endl;
+    // std::cout << "temp_y decomp:\n" << temp_y.matrix() << '\n';
+    // std::cout << "Alpha_:\n" << Alpha_ << '\n';
+    // std::cout << "direct solver answer of K wrt y_train:\n" << K.llt().solve(y_train_) << '\n';
+    // std::cout << "K * L_ - y_train(should near zero):\n" << K * Alpha_ - y_train << '\n';
 }
 
 gpr_results ExactGPR::predict(const Eigen::MatrixXd & X_test, bool return_cov)
@@ -47,7 +47,7 @@ gpr_results ExactGPR::predict(const Eigen::MatrixXd & X_test, bool return_cov)
     {
         results_.y_mean = Eigen::VectorXd::Zero(X_test.rows());
         results_.y_cov = Eigen::MatrixXd::Constant(X_test.rows(), X_test.rows(), 1.0);
-        std::cout << "No training data:\n" << kernel_->evaluate(X_test) << std::endl;
+        std::cout << "No training data:\n" << kernel_->evaluate(X_test) << '\n';
         return results_;
     }
     else
@@ -60,7 +60,7 @@ gpr_results ExactGPR::predict(const Eigen::MatrixXd & X_test, bool return_cov)
             Eigen::MatrixXd V;
             V = L_.triangularView<Eigen::Lower>().solve(K_trans.transpose());
             results_.y_cov = kernel_->evaluate(X_test) - V.transpose() * V;
-            // std::cout << "V error: " << (L_ * V - K_trans.transpose()).squaredNorm() << std::endl; // V error: 9.45317e-27
+            // std::cout << "V error: " << (L_ * V - K_trans.transpose()).squaredNorm() << '\n'; // V error: 9.45317e-27
         }
 
         if (normalize_y_)
@@ -70,12 +70,12 @@ gpr_results ExactGPR::predict(const Eigen::MatrixXd & X_test, bool return_cov)
             // In sklearn, for 2D output, the K_trans is the same, the y_cov is just [y_cov * std_1, y_cov * std_2]
         }
 
-        // std::cout << "X_test:\n" << X_test << std::endl;
-        // std::cout << "X_train_:\n" << X_train_ << std::endl;
-        // std::cout << "K_trans:\n" << K_trans << std::endl;
-        // std::cout << "y_mean:\n" << results_.y_mean << std::endl;
-        // std::cout << "V:\n" << V << std::endl;
-        // std::cout << "cov:\n" << results_.y_cov << std::endl;
+        // std::cout << "X_test:\n" << X_test << '\n';
+        // std::cout << "X_train_:\n" << X_train_ << '\n';
+        // std::cout << "K_trans:\n" << K_trans << '\n';
+        // std::cout << "y_mean:\n" << results_.y_mean << '\n';
+        // std::cout << "V:\n" << V << '\n';
+        // std::cout << "cov:\n" << results_.y_cov << '\n';
         return results_;
     }
 }
@@ -115,12 +115,12 @@ gpr_results ExactGPR::predict_at_uncertain_input(const Eigen::MatrixXd & X_test,
 
     certain_predict.y_cov(0, 0) += first_order_varience;
 
-    // std::cout << "[ExactGPR]: dmu_dx.T * input_cov is:\n" << certain_predict.y_covariance << std::endl;
-    // std::cout << "[ExactGPR]: dk_dx is:\n" << dk_dx << std::endl;
-    // std::cout << "[ExactGPR]: Alpha_ is:\n" << Alpha_ << std::endl;
-    // std::cout << "[ExactGPR]: dmu_dx is:\n" << dmu_dx << std::endl;
-    // std::cout << "[ExactGPR]: first_order_varience is:\n" << first_order_varience << std::endl;
-    // std::cout << "[ExactGPR]: exact cov is:\n" << certain_predict.y_cov << std::endl;
+    // std::cout << "[ExactGPR]: dmu_dx.T * input_cov is:\n" << certain_predict.y_covariance << '\n';
+    // std::cout << "[ExactGPR]: dk_dx is:\n" << dk_dx << '\n';
+    // std::cout << "[ExactGPR]: Alpha_ is:\n" << Alpha_ << '\n';
+    // std::cout << "[ExactGPR]: dmu_dx is:\n" << dmu_dx << '\n';
+    // std::cout << "[ExactGPR]: first_order_varience is:\n" << first_order_varience << '\n';
+    // std::cout << "[ExactGPR]: exact cov is:\n" << certain_predict.y_cov << '\n';
 
     return certain_predict;
 }

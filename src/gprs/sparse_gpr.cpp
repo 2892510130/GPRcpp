@@ -7,7 +7,7 @@ namespace GPRcpp
 
 void SparseGPR::fit(const Eigen::MatrixXd & X_train, const Eigen::MatrixXd & y_train, const Eigen::MatrixXd & inducing_points)
 {
-    std::cout << "<***** Fitting Sparse GPR *****>" << std::endl;
+    std::cout << "<***** Fitting Sparse GPR *****>" << '\n';
     has_x_train_ = true;
     X_train_ = X_train;
     y_train_ = y_train;
@@ -26,7 +26,7 @@ void SparseGPR::fit(const Eigen::MatrixXd & X_train, const Eigen::MatrixXd & y_t
 
 void SparseGPR::fit(const Eigen::MatrixXd & X_train, const Eigen::MatrixXd & y_train)
 {
-    std::cout << "<!!!! It is sparse GPR, please use fit function with inducing points !!!!>" << std::endl;
+    std::cout << "<!!!! It is sparse GPR, please use fit function with inducing points !!!!>" << '\n';
     throw std::runtime_error("Not implemented");
 }
 
@@ -63,24 +63,24 @@ void SparseGPR::fit_with_dtc()
 
 
     // For debug
-    // std::cout << "\nInducing point is:\n" << m_inducing_point << std::endl;
-    // std::cout << "\nVVT_factor is:\n" << VVT_factor << std::endl;
-    // std::cout << "\ntrYYT is:\n" << trYYT << std::endl;
-    // std::cout << "\nKmm is:\n" << Kmm << std::endl;
-    // std::cout << "\nLm is:\n" << Lm_LLT.matrixL().toDenseMatrix().block(0, 0, 4, 4) << std::endl;
-    // std::cout << "\nLB is:\n" << LB_LLT.matrixL().toDenseMatrix().block(0, 0, 4, 4) << std::endl;
-    // std::cout << "\npsi1 is:\n" << psi1 << std::endl;
-    // std::cout << "\ntmp1 is:\n" << tmp1 << std::endl;
-    // std::cout << "\ntmp2 is:\n" << tmp2 << std::endl;
-    // std::cout << "\nB is:\n" << B << std::endl;
-    // std::cout << "\nLB is:\n" << LB << std::endl;
-    // std::cout << "\ntmp3 is:\n" << tmp3 << std::endl;
-    // std::cout << "\nLBi_Lmi_psi1 is:\n" << LBi_Lmi_psi1 << std::endl;
-    // std::cout << "\nLBi_Lmi_psi1_vf is:\n" << LBi_Lmi_psi1_vf << std::endl;
-    // std::cout << "\ntmp4 is:\n" << tmp4 << std::endl;
-    // std::cout << "\nAlpha_ is:\n" << Alpha_ << std::endl;
-    // std::cout << "\nBi is:\n" << Bi << std::endl;
-    // std::cout << "\nwoodbury_inv is:\n" << woodbury_inv << std::endl;
+    // std::cout << "\nInducing point is:\n" << m_inducing_point << '\n';
+    // std::cout << "\nVVT_factor is:\n" << VVT_factor << '\n';
+    // std::cout << "\ntrYYT is:\n" << trYYT << '\n';
+    // std::cout << "\nKmm is:\n" << Kmm << '\n';
+    // std::cout << "\nLm is:\n" << Lm_LLT.matrixL().toDenseMatrix().block(0, 0, 4, 4) << '\n';
+    // std::cout << "\nLB is:\n" << LB_LLT.matrixL().toDenseMatrix().block(0, 0, 4, 4) << '\n';
+    // std::cout << "\npsi1 is:\n" << psi1 << '\n';
+    // std::cout << "\ntmp1 is:\n" << tmp1 << '\n';
+    // std::cout << "\ntmp2 is:\n" << tmp2 << '\n';
+    // std::cout << "\nB is:\n" << B << '\n';
+    // std::cout << "\nLB is:\n" << LB << '\n';
+    // std::cout << "\ntmp3 is:\n" << tmp3 << '\n';
+    // std::cout << "\nLBi_Lmi_psi1 is:\n" << LBi_Lmi_psi1 << '\n';
+    // std::cout << "\nLBi_Lmi_psi1_vf is:\n" << LBi_Lmi_psi1_vf << '\n';
+    // std::cout << "\ntmp4 is:\n" << tmp4 << '\n';
+    // std::cout << "\nAlpha_ is:\n" << Alpha_ << '\n';
+    // std::cout << "\nBi is:\n" << Bi << '\n';
+    // std::cout << "\nwoodbury_inv is:\n" << woodbury_inv << '\n';
 }
 
 void SparseGPR::fit_with_fitc()
@@ -119,25 +119,25 @@ void SparseGPR::fit_with_fitc()
     Eigen::MatrixXd P = tmp3.transpose() * tmp3;
     woodbury_inv = Kmmi - P;
 
-    // std::cout << "\nKmm is:\n" << Kmm << std::endl;
-    // std::cout << "\nKnn is:\n" << Knn << std::endl;
-    // std::cout << "\nKnm is:\n" << Knm << std::endl;
-    // std::cout << "\nLm is:\n" << Lm << std::endl;
-    // std::cout << "\nLmi is:\n" << Lmi << std::endl;
-    // std::cout << "\nKmmi is:\n" << Kmmi << std::endl;
-    // std::cout << "\nLiUT is:\n" << LiUT << std::endl;
-    // std::cout << "\nbeta_star is:\n" << beta_star << std::endl;
-    // std::cout << "\nbeta_star_sqrt is:\n" << beta_star_sqrt << std::endl;
-    // std::cout << "\nA is:\n" << A << std::endl;
-    // std::cout << "\nLA is:\n" << LA << std::endl;
-    // std::cout << "\nURiy is:\n" << URiy << std::endl;
-    // std::cout << "\ntmp1 is:\n" << tmp1 << std::endl;
-    // std::cout << "\nB is:\n" << B << std::endl;
-    // std::cout << "\ntmp2 is:\n" << tmp2 << std::endl;
-    // std::cout << "\nV is:\n" << Alpha_ << std::endl;
-    // std::cout << "\ntmp3 is:\n" << tmp3 << std::endl;
-    // std::cout << "\nP is:\n" << P << std::endl;
-    // std::cout << "\nwoodbury_inv is:\n" << woodbury_inv << std::endl;
+    // std::cout << "\nKmm is:\n" << Kmm << '\n';
+    // std::cout << "\nKnn is:\n" << Knn << '\n';
+    // std::cout << "\nKnm is:\n" << Knm << '\n';
+    // std::cout << "\nLm is:\n" << Lm << '\n';
+    // std::cout << "\nLmi is:\n" << Lmi << '\n';
+    // std::cout << "\nKmmi is:\n" << Kmmi << '\n';
+    // std::cout << "\nLiUT is:\n" << LiUT << '\n';
+    // std::cout << "\nbeta_star is:\n" << beta_star << '\n';
+    // std::cout << "\nbeta_star_sqrt is:\n" << beta_star_sqrt << '\n';
+    // std::cout << "\nA is:\n" << A << '\n';
+    // std::cout << "\nLA is:\n" << LA << '\n';
+    // std::cout << "\nURiy is:\n" << URiy << '\n';
+    // std::cout << "\ntmp1 is:\n" << tmp1 << '\n';
+    // std::cout << "\nB is:\n" << B << '\n';
+    // std::cout << "\ntmp2 is:\n" << tmp2 << '\n';
+    // std::cout << "\nV is:\n" << Alpha_ << '\n';
+    // std::cout << "\ntmp3 is:\n" << tmp3 << '\n';
+    // std::cout << "\nP is:\n" << P << '\n';
+    // std::cout << "\nwoodbury_inv is:\n" << woodbury_inv << '\n';
 }
 
 gpr_results SparseGPR::predict(const Eigen::MatrixXd & X_test)
@@ -151,7 +151,7 @@ gpr_results SparseGPR::predict(const Eigen::MatrixXd & X_test, bool return_cov)
     {
         results_.y_mean = Eigen::VectorXd::Zero(X_test.rows());
         results_.y_cov = Eigen::MatrixXd::Constant(X_test.rows(), X_test.rows(), 1.0);
-        std::cout << "No training data:\n" << kernel_->evaluate(X_test) << std::endl;
+        std::cout << "No training data:\n" << kernel_->evaluate(X_test) << '\n';
         return results_;
     }
     else
@@ -171,10 +171,10 @@ gpr_results SparseGPR::predict(const Eigen::MatrixXd & X_test, bool return_cov)
             // In sklearn, for 2D output, the K_trans is the same, the y_cov is just [y_cov * std_1, y_cov * std_2]
         }
 
-        // std::cout << "K_trans:\n" << K_trans << std::endl;
-        // std::cout << "y_mean:\n" << results_.y_mean << std::endl;
-        // std::cout << "V:\n" << V << std::endl;
-        // std::cout << "cov:\n" << results_.y_cov << std::endl;
+        // std::cout << "K_trans:\n" << K_trans << '\n';
+        // std::cout << "y_mean:\n" << results_.y_mean << '\n';
+        // std::cout << "V:\n" << V << '\n';
+        // std::cout << "cov:\n" << results_.y_cov << '\n';
         return results_;
     }
 }
@@ -209,12 +209,12 @@ gpr_results SparseGPR::predict_at_uncertain_input(const Eigen::MatrixXd & X_test
 
     certain_predict.y_cov(0, 0) += first_order_varience;
 
-    // std::cout << "[ExactGPR]: dmu_dx.T * input_cov is:\n" << certain_predict.y_covariance << std::endl;
-    // std::cout << "[ExactGPR]: dk_dx is:\n" << dk_dx << std::endl;
-    // std::cout << "[ExactGPR]: Alpha_ is:\n" << Alpha_ << std::endl;
-    // std::cout << "[ExactGPR]: dmu_dx is:\n" << dmu_dx << std::endl;
-    // std::cout << "[ExactGPR]: first_order_varience is:\n" << first_order_varience << std::endl;
-    // std::cout << "[ExactGPR]: exact cov is:\n" << certain_predict.y_cov << std::endl;
+    // std::cout << "[ExactGPR]: dmu_dx.T * input_cov is:\n" << certain_predict.y_covariance << '\n';
+    // std::cout << "[ExactGPR]: dk_dx is:\n" << dk_dx << '\n';
+    // std::cout << "[ExactGPR]: Alpha_ is:\n" << Alpha_ << '\n';
+    // std::cout << "[ExactGPR]: dmu_dx is:\n" << dmu_dx << '\n';
+    // std::cout << "[ExactGPR]: first_order_varience is:\n" << first_order_varience << '\n';
+    // std::cout << "[ExactGPR]: exact cov is:\n" << certain_predict.y_cov << '\n';
 
     return certain_predict;
 }

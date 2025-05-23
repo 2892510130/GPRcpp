@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
         // Eigen::setNbThreads(1);
         std::vector<Eigen::RowVector4d> v;
         read_input(v, input_size_, feature_window, "../Log/jizhi.txt");
-        std::cout << "Size of input: " << v.size() << std::endl;
+        std::cout << "Size of input: " << v.size() << '\n';
 
         /***  Fitting Process ***/
         auto start = std::chrono::high_resolution_clock::now();
@@ -64,7 +64,7 @@ int main(int argc, char *argv[])
         gpr_obj_v.fit(input_samples, output_samples_v);     
         auto end = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-        std::cout << "Fitting finished in :" << duration.count() << std::endl; 
+        std::cout << "Fitting finished in :" << duration.count() << '\n'; 
 
         // double test_ptr = std::dynamic_pointer_cast<white_kernel>(white_kernel_Ptr)->test(); // 但是最初创建的时候就必须是指向这个类型的指针，否则会报错
 
@@ -86,19 +86,19 @@ int main(int argc, char *argv[])
 
             if (test_sample_size < 5)
             {
-                std::cout << "Input is: \n" << input_samples.row(i) << std::endl;
-                std::cout << "Output w is: \n" << output_samples_w.row(i) << ", " << y_mean_list_w(i) << std::endl;
-                std::cout << "Output v is: \n" << output_samples_v.row(i) << ", " << y_mean_list_v(i) << std::endl;
+                std::cout << "Input is: \n" << input_samples.row(i) << '\n';
+                std::cout << "Output w is: \n" << output_samples_w.row(i) << ", " << y_mean_list_w(i) << '\n';
+                std::cout << "Output v is: \n" << output_samples_v.row(i) << ", " << y_mean_list_v(i) << '\n';
             }
         }
         end = std::chrono::high_resolution_clock::now();
         duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-        std::cout << "Predict finished in :" << duration.count() << std::endl;
-        std::cout << "Error sum w: " << (y_mean_list_w - output_samples_w).cwiseAbs().mean() << std::endl;
-        std::cout << "Error sum v: " << (y_mean_list_v - output_samples_v).cwiseAbs().mean() << std::endl;
+        std::cout << "Predict finished in :" << duration.count() << '\n';
+        std::cout << "Error sum w: " << (y_mean_list_w - output_samples_w).cwiseAbs().mean() << '\n';
+        std::cout << "Error sum v: " << (y_mean_list_v - output_samples_v).cwiseAbs().mean() << '\n';
 
-        std::cout << "T2 Error sum w: " << (y_mean_list_w - output_samples_w).segment(0, test_sample_size - input_window + 1).cwiseAbs().mean() << std::endl;
-        std::cout << "T2 Error sum v: " << (y_mean_list_v - output_samples_v).segment(0, test_sample_size - input_window + 1).cwiseAbs().mean() << std::endl;
+        std::cout << "T2 Error sum w: " << (y_mean_list_w - output_samples_w).segment(0, test_sample_size - input_window + 1).cwiseAbs().mean() << '\n';
+        std::cout << "T2 Error sum v: " << (y_mean_list_v - output_samples_v).segment(0, test_sample_size - input_window + 1).cwiseAbs().mean() << '\n';
 
         if (test_sample_size > 30)
         {
@@ -139,21 +139,21 @@ int main(int argc, char *argv[])
 
             if (test_sample_size < 5)
             {
-                std::cout << "Input is: \n" << gpr_input << std::endl;
-                std::cout << "Input array is: \n" << gpr_input_array << std::endl;
-                std::cout << "Output w is: \n" << output_samples_w(i) << ", " << p_w_normal << std::endl;
-                std::cout << "Output v is: \n" << output_samples_v(i) << ", " << p_v_normal << std::endl;
+                std::cout << "Input is: \n" << gpr_input << '\n';
+                std::cout << "Input array is: \n" << gpr_input_array << '\n';
+                std::cout << "Output w is: \n" << output_samples_w(i) << ", " << p_w_normal << '\n';
+                std::cout << "Output v is: \n" << output_samples_v(i) << ", " << p_v_normal << '\n';
             }
         }
-        std::cout << "2 Error sum w: " << (y_mean_list_w - output_samples_w).segment(0, test_sample_size - input_window + 1).cwiseAbs().mean() << std::endl;
-        std::cout << "2 Error sum v: " << (y_mean_list_v - output_samples_v).segment(0, test_sample_size - input_window + 1).cwiseAbs().mean() << std::endl;
+        std::cout << "2 Error sum w: " << (y_mean_list_w - output_samples_w).segment(0, test_sample_size - input_window + 1).cwiseAbs().mean() << '\n';
+        std::cout << "2 Error sum v: " << (y_mean_list_v - output_samples_v).segment(0, test_sample_size - input_window + 1).cwiseAbs().mean() << '\n';
 
         // fclose(log_file);
         // log_file = nullptr;
 	gpr_feature_4d << 0.0100006, 0.00126642, 0.00989515, 0.00288956;
-	std::cout << "Is there bug? " << gpr_feature_4d << std::endl;
+	std::cout << "Is there bug? " << gpr_feature_4d << '\n';
 	auto bug = gpr_obj_v.predict(gpr_feature_4d, true).y_mean(0);
-	std::cout << bug << std::endl;
+	std::cout << bug << '\n';
 
     }
 
@@ -166,7 +166,7 @@ void read_input(std::vector<Eigen::RowVector4d> &v, int sample_size,
     Eigen::RowVector4d v_member;
 
     if (!inputFile) {
-        std::cout << "无法打开文件!" << std::endl;
+        std::cout << "无法打开文件!" << '\n';
     }
     float num;
     int count = 0;

@@ -29,8 +29,8 @@ kernel_operator::kernel_operator(std::shared_ptr<kernel_base> left, std::shared_
     params_.resize(left_params.size() + right_params.size());
     std::copy(left_params.begin(), left_params.end(), params_.begin());
     std::copy(right_params.begin(), right_params.end(), params_.begin() + left_params.size());
-    // std::cout << "params:\n" << params_[0] << std::endl;
-    // std::cout << "params:\n" << params_[1] << std::endl;
+    // std::cout << "params:\n" << params_[0] << '\n';
+    // std::cout << "params:\n" << params_[1] << '\n';
 }
 
 kernel_operator::~kernel_operator()

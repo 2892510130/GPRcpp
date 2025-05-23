@@ -32,7 +32,7 @@ namespace GPRcpp
         // dist_.array() += Xsq.array();
         // dist_.array() += Xsq.array().transpose();
         // dist_ = (dist_.array() < 0).select(0, dist_);
-        // std::cout << dist_.rows() << ", " << dist_.cols() << std::endl;
+        // std::cout << dist_.rows() << ", " << dist_.cols() << '\n';
 
         return dist_;
     }
