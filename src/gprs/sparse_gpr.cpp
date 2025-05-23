@@ -8,7 +8,6 @@ namespace GPRcpp
 void SparseGPR::fit(const Eigen::MatrixXd & X_train, const Eigen::MatrixXd & y_train, const Eigen::MatrixXd & inducing_points)
 {
     std::cout << "<***** Fitting Sparse GPR *****>" << std::endl;
-    if (use_ldlt_) std::cout << "<***** Using the LDLT! *****>" << std::endl;
     has_x_train_ = true;
     X_train_ = X_train;
     y_train_ = y_train;
@@ -41,56 +40,27 @@ void SparseGPR::fit_with_dtc()
     Eigen::MatrixXd Kmm = kernel_->evaluate(m_inducing_point);
     Kmm += Eigen::MatrixXd::Identity(Kmm.rows(), Kmm.cols()) * alpha_;
 
-    if (!use_ldlt_)
-    {
-        Eigen::LLT<Eigen::MatrixXd> Lm_LLT = Kmm.llt();
 
-        // Compute psi stats and factor B
-        Eigen::MatrixXd psi1 = kernel_->evaluate(X_train_, m_inducing_point);
-        Eigen::MatrixXd tmp1 = psi1 * sqrt(precision);
-        Eigen::MatrixXd tmp2 = Lm_LLT.matrixL().solve(tmp1.transpose());
-        Eigen::MatrixXd B = tmp2 * tmp2.transpose() + Eigen::MatrixXd::Identity(Kmm.rows(), Kmm.cols()); // If you want to compute log margin, seperate this
-        
-        Eigen::LLT<Eigen::MatrixXd> LB_LLT;
-        LB_LLT = B.llt();
-        Eigen::MatrixXd Bi = -1.0 * LB_LLT.solve(Eigen::MatrixXd::Identity(B.rows(), B.cols())) + Eigen::MatrixXd::Identity(B.rows(), B.cols());
+    Eigen::LLT<Eigen::MatrixXd> Lm_LLT = Kmm.llt();
 
-        // compute woodbury inv and vector
-        Eigen::MatrixXd tmp3 = Lm_LLT.matrixL().solve(psi1.transpose());
-        Eigen::MatrixXd LBi_Lmi_psi1 = LB_LLT.matrixL().solve(tmp3);
-        Eigen::MatrixXd LBi_Lmi_psi1_vf = LBi_Lmi_psi1 * VVT_factor;
-        Eigen::MatrixXd tmp4 = LB_LLT.matrixU().solve(LBi_Lmi_psi1_vf);
-        Alpha_ = Lm_LLT.matrixU().solve(tmp4);
-        woodbury_inv = (Lm_LLT.matrixU().solve((Lm_LLT.matrixU().solve(Bi)).transpose())).transpose();
-    }
-    else
-    {
-        Eigen::LDLT<Eigen::MatrixXd> Lm_LDLT = Kmm.ldlt();
-        Eigen::MatrixXd L1 = Lm_LDLT.matrixL();
-        Eigen::MatrixXd D1 = Lm_LDLT.vectorD().cwiseSqrt();  // D 的平方根
-        L_ = L1 * D1.asDiagonal();
+    // Compute psi stats and factor B
+    Eigen::MatrixXd psi1 = kernel_->evaluate(X_train_, m_inducing_point);
+    Eigen::MatrixXd tmp1 = psi1 * sqrt(precision);
+    Eigen::MatrixXd tmp2 = Lm_LLT.matrixL().solve(tmp1.transpose());
+    Eigen::MatrixXd B = tmp2 * tmp2.transpose() + Eigen::MatrixXd::Identity(Kmm.rows(), Kmm.cols()); // If you want to compute log margin, seperate this
+    
+    Eigen::LLT<Eigen::MatrixXd> LB_LLT;
+    LB_LLT = B.llt();
+    Eigen::MatrixXd Bi = -1.0 * LB_LLT.solve(Eigen::MatrixXd::Identity(B.rows(), B.cols())) + Eigen::MatrixXd::Identity(B.rows(), B.cols());
 
-        // Compute psi stats and factor B
-        Eigen::MatrixXd psi1 = kernel_->evaluate(X_train_, m_inducing_point);
-        Eigen::MatrixXd tmp1 = psi1 * sqrt(precision);
-        Eigen::MatrixXd tmp2 = L_.triangularView<Eigen::Lower>().solve(Lm_LDLT.transpositionsP() * tmp1.transpose());
-        Eigen::MatrixXd B = tmp2 * tmp2.transpose() + Eigen::MatrixXd::Identity(Kmm.rows(), Kmm.cols()); // If you want to compute log margin, seperate this
-        
-        Eigen::LDLT<Eigen::MatrixXd> LB_LDLT;
-        LB_LDLT = B.ldlt();
-        Eigen::MatrixXd L2 = LB_LDLT.matrixL();
-        Eigen::MatrixXd D2 = LB_LDLT.vectorD().cwiseSqrt();  // D 的平方根
-        Eigen::MatrixXd L_2 = L2 * D2.asDiagonal();
-        Eigen::MatrixXd Bi = -1.0 * LB_LDLT.solve(Eigen::MatrixXd::Identity(B.rows(), B.cols())) + Eigen::MatrixXd::Identity(B.rows(), B.cols());
+    // compute woodbury inv and vector
+    Eigen::MatrixXd tmp3 = Lm_LLT.matrixL().solve(psi1.transpose());
+    Eigen::MatrixXd LBi_Lmi_psi1 = LB_LLT.matrixL().solve(tmp3);
+    Eigen::MatrixXd LBi_Lmi_psi1_vf = LBi_Lmi_psi1 * VVT_factor;
+    Eigen::MatrixXd tmp4 = LB_LLT.matrixU().solve(LBi_Lmi_psi1_vf);
+    Alpha_ = Lm_LLT.matrixU().solve(tmp4);
+    woodbury_inv = (Lm_LLT.matrixU().solve((Lm_LLT.matrixU().solve(Bi)).transpose())).transpose();
 
-        // compute woodbury inv and vector
-        Eigen::MatrixXd tmp3 = L_.triangularView<Eigen::Lower>().solve(Lm_LDLT.transpositionsP() * psi1.transpose());
-        Eigen::MatrixXd LBi_Lmi_psi1 = L_2.triangularView<Eigen::Lower>().solve(LB_LDLT.transpositionsP() * tmp3);
-        Eigen::MatrixXd LBi_Lmi_psi1_vf = LBi_Lmi_psi1 * VVT_factor;
-        Eigen::MatrixXd tmp4 = L_2.transpose().triangularView<Eigen::Upper>().solve(LB_LDLT.transpositionsP().transpose() * LBi_Lmi_psi1_vf);
-        Alpha_ = (L_.transpose()).triangularView<Eigen::Upper>().solve(Lm_LDLT.transpositionsP().transpose() * tmp4);
-        woodbury_inv = ((L_.transpose()).triangularView<Eigen::Upper>().solve(((L_.transpose()).triangularView<Eigen::Upper>().solve(Bi * Lm_LDLT.transpositionsP().transpose())).transpose() * Lm_LDLT.transpositionsP().transpose())).transpose();
-    }
 
     // For debug
     // std::cout << "\nInducing point is:\n" << m_inducing_point << std::endl;

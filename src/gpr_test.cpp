@@ -235,7 +235,6 @@ void test_uncertainty_propagation()
     std::shared_ptr<kernel_base> constant_kernel_ptr_2 = std::make_shared<constant_kernel>(0.5);
     std::shared_ptr<kernel_base> real_kernel_3 = std::make_shared<product_kernel>(constant_kernel_ptr_2, rbf_kernel_ptr_2);
     SparseGPR spgp(real_kernel_3, false);
-    spgp.use_ldlt_ = false;
     spgp.inference_method = 1;
     spgp.fit(data.m_feature, data.m_output.col(0), data.m_inducing_points);
 
@@ -296,7 +295,6 @@ void test_with_minimal_data()
     std::shared_ptr<kernel_base> realkernelPtr = std::make_shared<sum_kernel>(realkernelPtr_1, realkernelPtr_2);
 
     SparseGPR spgp(realkernelPtr, false);
-    // spgp.use_ldlt_ = true;
     spgp.inference_method = 0;
     spgp.fit(data.m_feature, data.m_output.col(0), data.m_inducing_points);
     auto result = spgp.predict(data.m_feature, true);
@@ -305,7 +303,6 @@ void test_with_minimal_data()
     std::cout << "\n[varDTC] cov:\n" << result.y_cov << std::endl;
 
     SparseGPR spgp_fict(realkernelPtr, false);
-    // spgp.use_ldlt_ = true;
     spgp_fict.inference_method = 1;
     spgp_fict.fit(data.m_feature, data.m_output.col(0), data.m_inducing_points);
     auto result_fitc = spgp_fict.predict(data.m_feature, true);
@@ -314,7 +311,7 @@ void test_with_minimal_data()
     std::cout << "\n[FITC] cov:\n" << result_fitc.y_cov << std::endl;
 }
 
-void test_with_big_data(int iteration) // TODO: BUG here with use ldlt
+void test_with_big_data(int iteration)
 {
     std::string file_path = "C:/Users/pc/Desktop/Personal/Code/GPRcpp/Log/gazebo1.txt";
     GPData data = read_sparse_gp_data_from_file(file_path, 12, 2, 291, 40, true);
@@ -330,7 +327,6 @@ void test_with_big_data(int iteration) // TODO: BUG here with use ldlt
     SparseGPR spgp(realkernelPtr, true);
     spgp.likelihood_varience = 0.33669;
     spgp.inference_method = 0;
-    // spgp.use_ldlt_ = true;
     spgp.fit(data.m_feature, data.m_output.col(1), data.m_inducing_points_additional);
     auto result = spgp.predict(data.m_feature, true);
 
@@ -345,7 +341,6 @@ void test_with_big_data(int iteration) // TODO: BUG here with use ldlt
     // ----------- A big data test ----------- //
     std::cout << "\n----------- A big data test -----------\n";
     ExactGPR egp(realkernelPtr, true);
-    // egp.use_ldlt_ = true;
     egp.fit(data.m_feature, data.m_output.col(1));
     auto result2 = egp.predict(data.m_feature, true);
     // egp.fit(data.m_feature.block(0, 0, 120, 12), data.m_output.block(0, 1, 120, 1));
@@ -357,7 +352,7 @@ void test_with_big_data(int iteration) // TODO: BUG here with use ldlt
 
     for (int i = 0; i < iteration; i++)
     {
-        const int index = std::min((long long)i, data.m_feature.rows() - 1);
+        const int index = std::min(decltype(data.m_feature.rows())(i), data.m_feature.rows() - 1);
         result2 = egp.predict(data.m_feature.row(index), true);
     }
 

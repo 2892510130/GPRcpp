@@ -28,38 +28,12 @@ void ExactGPR::fit(const Eigen::MatrixXd & X_train, const Eigen::MatrixXd & y_tr
     auto K = kernel_->evaluate(X_train_);
     K += Eigen::MatrixXd::Identity(K.rows(), K.cols()) * alpha_;
 
-    // How to use ldlt to get answer same as llt: Alpha is the same process. As for L_,
-    // in exact gpr the only useage is to get k_trans * K^(-1) * k_trans^T by 
-    // (L_^(-1) * K_trans^T)^T * (L_^(-1) * K_trans^T) -> J^T * J. So for ldlt
-    // J = D^(-1/2) * L^(-1) * P * K_trans^T. L_ = L * D^(1/2).
-    // The speed compare: llt is 1.2x ~ 1.5x faster than ldlt
-    if (use_ldlt_)
-    {
-        Eigen::LDLT<Eigen::MatrixXd> Lm_LLT = K.ldlt();
-        Eigen::MatrixXd L1 = Lm_LLT.matrixL();
-        Eigen::MatrixXd D1 = Lm_LLT.vectorD().cwiseSqrt();  // D 的平方根
-        L_ = L1 * D1.asDiagonal();
-        m_P = Lm_LLT.transpositionsP();
-        Alpha_ = Lm_LLT.solve(y_train_);
-    }
-    else
-    {
-        Eigen::LLT<Eigen::MatrixXd> LLT_ = K.llt();
-        L_ = LLT_.matrixL();
-        Alpha_ = LLT_.solve(y_train_);
-
-        // Error in these are all 291
-        // const Eigen::MatrixXd L_inv = LLT_.matrixL().solve(Eigen::MatrixXd::Identity(K.rows(), K.cols()));
-        // std::cout << "K_inv error: " << (L_inv.transpose() * L_inv * K).squaredNorm() << std::endl;
-        // std::cout << "L_inv error: " << (L_inv * L_).squaredNorm() << std::endl;
-        // std::cout << "K_inv llt error: " << (LLT_.solve(Eigen::MatrixXd::Identity(K.rows(), K.cols())) * K).squaredNorm() << std::endl;
-        // std::cout << "K_inv error: " << (K.inverse() * K).squaredNorm() << std::endl;
-        // std::cout << "K cond: " << LLT_.solve(Eigen::MatrixXd::Identity(K.rows(), K.cols())).norm() * K.norm() << std::endl; // 4e11
-        // std::cout << "K_inv ldlt error: " << (Lm_LLT.solve(Eigen::MatrixXd::Identity(K.rows(), K.cols())) * K).squaredNorm() << std::endl;
-        Eigen::EigenSolver<Eigen::MatrixXd> solver(K);
-        // std::cout << "Eigenvalues: \n" << solver.eigenvalues() << std::endl;
-    }
-
+    
+    Eigen::LLT<Eigen::MatrixXd> LLT_ = K.llt();
+    L_ = LLT_.matrixL();
+    Alpha_ = LLT_.solve(y_train_);
+    Eigen::EigenSolver<Eigen::MatrixXd> solver(K);
+    
     // For debug
     // std::cout << "temp_y decomp:\n" << temp_y.matrix() << std::endl;
     // std::cout << "Alpha_:\n" << Alpha_ << std::endl;
@@ -84,10 +58,8 @@ gpr_results ExactGPR::predict(const Eigen::MatrixXd & X_test, bool return_cov)
         if (return_cov)
         {
             Eigen::MatrixXd V;
-            if (use_ldlt_) V = L_.triangularView<Eigen::Lower>().solve(m_P * K_trans.transpose());
-            else V = L_.triangularView<Eigen::Lower>().solve(K_trans.transpose());
+            V = L_.triangularView<Eigen::Lower>().solve(K_trans.transpose());
             results_.y_cov = kernel_->evaluate(X_test) - V.transpose() * V;
-
             // std::cout << "V error: " << (L_ * V - K_trans.transpose()).squaredNorm() << std::endl; // V error: 9.45317e-27
         }
 

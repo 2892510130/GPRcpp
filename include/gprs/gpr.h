@@ -45,11 +45,9 @@ public:
     double likelihood_varience = 1.0;
     Eigen::MatrixXd L_; // LL^T = K(X, X) for exact gpr
     Eigen::MatrixXd Alpha_; // Alpha_ = K^{-1} * y
-    Eigen::PermutationMatrix<Eigen::Dynamic> m_P; // just for the ldlt
     // std::shared_ptr<Eigen::SolverBase<Eigen::MatrixXd>> m_solver_ptr;
     bool has_x_train_;
     bool normalize_y_ = false;
-    bool use_ldlt_ = false;
     Eigen::MatrixXd X_train_;
     Eigen::MatrixXd y_train_;
     Eigen::RowVectorXd y_train_mean_;
