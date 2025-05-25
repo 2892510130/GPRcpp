@@ -14,7 +14,7 @@ public:
     void fit_with_dtc();
     void fit_with_fitc();
     gpr_results predict(const Eigen::MatrixXd & X_test) override;
-    gpr_results predict(const Eigen::MatrixXd & X_test, bool return_cov) override;
+    gpr_results predict(const Eigen::MatrixXd & X_test, bool return_cov, bool compute_jac = false) override;
     gpr_results predict_at_uncertain_input(const Eigen::MatrixXd & X_test, const Eigen::MatrixXd & input_cov) override;
     gpr_results predict_at_uncertain_input(const Eigen::MatrixXd & X_test, const Eigen::MatrixXd & input_cov, bool add_covariance, bool add_second_order_variance) override;
 

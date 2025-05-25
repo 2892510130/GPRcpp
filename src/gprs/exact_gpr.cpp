@@ -41,7 +41,7 @@ void ExactGPR::fit(const Eigen::MatrixXd & X_train, const Eigen::MatrixXd & y_tr
     // std::cout << "K * L_ - y_train(should near zero):\n" << K * Alpha_ - y_train << '\n';
 }
 
-gpr_results ExactGPR::predict(const Eigen::MatrixXd & X_test, bool return_cov)
+gpr_results ExactGPR::predict(const Eigen::MatrixXd & X_test, bool return_cov, bool compute_jac)
 {
     if (!has_x_train_)
     {

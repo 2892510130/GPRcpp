@@ -32,7 +32,7 @@ public:
     
     virtual gpr_results predict(const Eigen::MatrixXd & X_test) = 0;
 
-    virtual gpr_results predict(const Eigen::MatrixXd & X_test, bool return_cov) = 0;
+    virtual gpr_results predict(const Eigen::MatrixXd & X_test, bool return_cov, bool compute_jac = false) = 0;
 
     virtual gpr_results predict_at_uncertain_input(const Eigen::MatrixXd & X_test, const Eigen::MatrixXd & input_cov) = 0;
 
@@ -45,7 +45,6 @@ public:
     double likelihood_varience = 1.0;
     Eigen::MatrixXd L_; // LL^T = K(X, X) for exact gpr
     Eigen::MatrixXd Alpha_; // Alpha_ = K^{-1} * y
-    // std::shared_ptr<Eigen::SolverBase<Eigen::MatrixXd>> m_solver_ptr;
     bool has_x_train_;
     bool normalize_y_ = false;
     Eigen::MatrixXd X_train_;

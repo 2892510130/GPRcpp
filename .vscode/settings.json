@@ -56,7 +56,19 @@
         "thread": "cpp",
         "typeinfo": "cpp",
         "*.inc": "cpp",
-        "cholesky": "cpp"
+        "cholesky": "cpp",
+        "bit": "cpp",
+        "charconv": "cpp",
+        "compare": "cpp",
+        "concepts": "cpp",
+        "format": "cpp",
+        "iomanip": "cpp",
+        "numbers": "cpp",
+        "semaphore": "cpp",
+        "span": "cpp",
+        "stop_token": "cpp",
+        "text_encoding": "cpp",
+        "variant": "cpp"
     },
     "cmake.configureOnEdit": false
 }

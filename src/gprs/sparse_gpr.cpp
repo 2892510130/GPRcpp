@@ -145,7 +145,7 @@ gpr_results SparseGPR::predict(const Eigen::MatrixXd & X_test)
     return predict(X_test, false);
 }
 
-gpr_results SparseGPR::predict(const Eigen::MatrixXd & X_test, bool return_cov)
+gpr_results SparseGPR::predict(const Eigen::MatrixXd & X_test, bool return_cov, bool compute_jac)
 {
     if (!has_x_train_)
     {
@@ -162,6 +162,16 @@ gpr_results SparseGPR::predict(const Eigen::MatrixXd & X_test, bool return_cov)
         if (return_cov)
         {
             results_.y_cov = kernel_->evaluate(X_test) - K_trans * woodbury_inv * K_trans.transpose();
+        }
+
+        if (compute_jac)
+        {
+            const Eigen::MatrixXd dk_dx =  kernel_->dk_dx(m_inducing_point, X_test);
+            results_.dmu_dx = dk_dx.transpose() * Alpha_;
+            if (normalize_y_)
+            {
+                results_.dmu_dx = (results_.dmu_dx.array().rowwise() * y_train_std_.array());
+            }
         }
 
         if (normalize_y_)
