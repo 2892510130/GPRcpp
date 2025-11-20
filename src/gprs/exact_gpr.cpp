@@ -27,12 +27,8 @@ void ExactGPR::fit(const Eigen::MatrixXd & X_train, const Eigen::MatrixXd & y_tr
 
     auto K = kernel_->evaluate(X_train_);
     K += Eigen::MatrixXd::Identity(K.rows(), K.cols()) * alpha_;
-
-    
     Eigen::LLT<Eigen::MatrixXd> LLT_ = K.llt();
-    L_ = LLT_.matrixL();
     Alpha_ = LLT_.solve(y_train_);
-    Eigen::EigenSolver<Eigen::MatrixXd> solver(K);
 
     // For debug
     // std::cout << "temp_y decomp:\n" << temp_y.matrix() << '\n';

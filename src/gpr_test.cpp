@@ -20,7 +20,7 @@ void test_with_minimal_data();
 
 void test_with_big_data(int iteration);
 
-void test_for_py_simulator();
+void test_for_py_simulator(int sparse_method = 0);
 
 int main(int argc, char *argv[]) 
 {
@@ -47,13 +47,15 @@ int main(int argc, char *argv[])
 	else if (atoi(argv[1]) == 4)
     {
         std::cout << "You have select py simulator test!" << '\n';
-        test_for_py_simulator();
+        int sparse_method = 0;
+        if (argc > 2) sparse_method = atoi(argv[2]);
+        test_for_py_simulator(sparse_method);
     }
 
     return 0;
 }
 
-void test_for_py_simulator()
+void test_for_py_simulator(int sparse_method)
 {
     std::string file_path = "C:/Users/pc/Desktop/Personal/Code/GPRcpp/Log/py.txt";
     GPData data = read_sparse_gp_data_from_file(file_path, 12, 2, 129, 40, true);
@@ -68,6 +70,7 @@ void test_for_py_simulator()
 
     SparseGPR spgp_v(my_kernel_v, normalize_gpr);
     spgp_v.likelihood_varience = 0.10276029249210838;
+    if (sparse_method != 0) spgp_v.inference_method = 1;
     spgp_v.fit(data.m_feature, data.m_output.col(0), data.m_inducing_points);
 	
     // Read for state w
@@ -79,6 +82,7 @@ void test_for_py_simulator()
 
     SparseGPR spgp_w(my_kernel_w, normalize_gpr);
     spgp_w.likelihood_varience = 0.004372263083734497;
+    if (sparse_method != 0) spgp_w.inference_method = 1;
     spgp_w.fit(data.m_feature, data.m_output.col(1), data.m_inducing_points_additional);
 
     // Check mean and var
