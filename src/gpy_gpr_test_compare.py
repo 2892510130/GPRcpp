@@ -5,6 +5,7 @@ import os
 
 class GaussianModel:
     def __init__(self, gaussian_opts:dict):
+        sparse_method = 0
         # ----- 1. Read the data and load it to numpy -----
         train_data, inducing_data = self.read_data(gaussian_opts)
 
@@ -20,7 +21,8 @@ class GaussianModel:
                 num_inducing=gaussian_opts["inducing_data_number"], Z=inducing_data[:gaussian_opts["inducing_data_number"], :],
                 kernel=my_kernel_v, normalizer=True)
         self.sparse_model_v.likelihood = GPy.likelihoods.Gaussian(variance=param_v[0])
-        self.sparse_model_v.inference_method = GPy.inference.latent_function_inference.FITC()
+        if sparse_method == 1:
+            self.sparse_model_v.inference_method = GPy.inference.latent_function_inference.FITC()
         self.sparse_model_v.parameters_changed()
 
         # ----- 3. Build the GPR for the rotation speed state -----
@@ -32,7 +34,8 @@ class GaussianModel:
                 num_inducing=gaussian_opts["inducing_data_number"], Z=inducing_data[gaussian_opts["inducing_data_number"]:, :],
                 kernel=my_kernel_w, normalizer=True)
         self.sparse_model_w.likelihood = GPy.likelihoods.Gaussian(variance=param_w[0])
-        self.sparse_model_w.inference_method = GPy.inference.latent_function_inference.FITC()
+        if sparse_method == 1:
+            self.sparse_model_w.inference_method = GPy.inference.latent_function_inference.FITC()
         self.sparse_model_w.parameters_changed()
     
     def read_data(self, gaussian_opts:dict):

@@ -1,0 +1,19 @@
+double inv_sigma = 1.0 / fmax(likelihood_varience, alpha_);
+
+// Get Kuu and Lm from the inducing points
+Eigen::MatrixXd inv_sigma_Y = inv_sigma * y_train_; // (Y - mean) if mean is not 0
+Eigen::MatrixXd Kuu = kernel_->evaluate(m_inducing_point);
+Kuu = (Kuu + Kuu.transpose()) / 2 + Eigen::MatrixXd::Identity(Kuu.rows(), Kuu.cols()) * alpha_;
+
+Eigen::LLT<Eigen::MatrixXd> cholesky_Kuu = Kuu.llt();
+m_Luu = cholesky_Kuu.matrixL();
+
+// Compute psi stats and factor B
+Eigen::MatrixXd Kuf = kernel_->evaluate(m_inducing_point, X_train_);
+m_W = cholesky_Kuu.matrixL().solve(Kuf);
+m_W_d_inv_y = m_W * inv_sigma_Y;
+
+Eigen::MatrixXd K = inv_sigma * (m_W * m_W.transpose());
+K = (K + K.transpose()) / 2 + Eigen::MatrixXd::Identity(K.rows(), K.cols());
+Eigen::LLT<Eigen::MatrixXd> cholesky_K = K.llt();
+m_L = cholesky_K.matrixL();

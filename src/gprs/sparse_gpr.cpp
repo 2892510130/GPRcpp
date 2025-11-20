@@ -34,26 +34,26 @@ void SparseGPR::fit_with_dtc()
 {
     double inv_sigma = 1.0 / fmax(likelihood_varience, alpha_);
 
-    // Get K_uu and Lm from the inducing points
+    // Get Kuu and Luu from the inducing points
     Eigen::MatrixXd inv_sigma_Y = inv_sigma * y_train_; // (Y - mean) if mean is not 0
     // double trYYT = inv_sigma_Y.squaredNorm(); // What this for?
-    Eigen::MatrixXd K_uu = kernel_->evaluate(m_inducing_point);
-    K_uu = (K_uu + K_uu.transpose()) / 2 + Eigen::MatrixXd::Identity(K_uu.rows(), K_uu.cols()) * alpha_;
+    Eigen::MatrixXd Kuu = kernel_->evaluate(m_inducing_point);
+    Kuu = (Kuu + Kuu.transpose()) / 2 + Eigen::MatrixXd::Identity(Kuu.rows(), Kuu.cols()) * alpha_;
 
-    Eigen::LLT<Eigen::MatrixXd> LowerK_uu = K_uu.llt();
+    Eigen::LLT<Eigen::MatrixXd> LowerK_uu = Kuu.llt();
 
     // Compute psi stats and factor B
-    Eigen::MatrixXd K_fu = kernel_->evaluate(X_train_, m_inducing_point);
-    Eigen::MatrixXd tmp1 = K_fu * sqrt(inv_sigma);
+    Eigen::MatrixXd Kfu = kernel_->evaluate(X_train_, m_inducing_point);
+    Eigen::MatrixXd tmp1 = Kfu * sqrt(inv_sigma);
     Eigen::MatrixXd tmp2 = LowerK_uu.matrixL().solve(tmp1.transpose());
-    Eigen::MatrixXd B = tmp2 * tmp2.transpose() + Eigen::MatrixXd::Identity(K_uu.rows(), K_uu.cols()); // If you want to compute log margin, seperate this
+    Eigen::MatrixXd B = tmp2 * tmp2.transpose() + Eigen::MatrixXd::Identity(Kuu.rows(), Kuu.cols()); // If you want to compute log margin, seperate this
     
     Eigen::LLT<Eigen::MatrixXd> LB_LLT;
     LB_LLT = B.llt();
     Eigen::MatrixXd Bi = -1.0 * LB_LLT.solve(Eigen::MatrixXd::Identity(B.rows(), B.cols())) + Eigen::MatrixXd::Identity(B.rows(), B.cols());
 
     // compute woodbury inv and vector
-    Eigen::MatrixXd tmp3 = LowerK_uu.matrixL().solve(K_fu.transpose());
+    Eigen::MatrixXd tmp3 = LowerK_uu.matrixL().solve(Kfu.transpose());
     Eigen::MatrixXd LBi_Lmi_K_fu = LB_LLT.matrixL().solve(tmp3);
     Eigen::MatrixXd LBi_Lmi_K_fu_vf = LBi_Lmi_K_fu * inv_sigma_Y;
     Eigen::MatrixXd tmp4 = LB_LLT.matrixU().solve(LBi_Lmi_K_fu_vf);
@@ -65,10 +65,10 @@ void SparseGPR::fit_with_dtc()
     // std::cout << "\nInducing point is:\n" << m_inducing_point << '\n';
     // std::cout << "\nneg_sigma_Y is:\n" << inv_sigma_Y << '\n';
     // std::cout << "\ntrYYT is:\n" << trYYT << '\n';
-    // std::cout << "\nK_uu is:\n" << K_uu << '\n';
+    // std::cout << "\nK_uu is:\n" << Kuu << '\n';
     // std::cout << "\nLm is:\n" << LowerK_uu.matrixL().toDenseMatrix().block(0, 0, 4, 4) << '\n';
     // std::cout << "\nLB is:\n" << LB_LLT.matrixL().toDenseMatrix().block(0, 0, 4, 4) << '\n';
-    // std::cout << "\nK_fu is:\n" << K_fu << '\n';
+    // std::cout << "\nK_fu is:\n" << Kfu << '\n';
     // std::cout << "\ntmp1 is:\n" << tmp1 << '\n';
     // std::cout << "\ntmp2 is:\n" << tmp2 << '\n';
     // std::cout << "\nB is:\n" << B << '\n';
@@ -85,50 +85,51 @@ void SparseGPR::fit_with_dtc()
 void SparseGPR::fit_with_fitc()
 {
     /*
-     * Compare with the pyGPR code, LiUT => W = Luu_inv @ Kuf,
-     * beta_star => diag_inv, LA => L, URiy => Kuf @ diag_inv @ y
+     * Compare with the pyGPR code, Luu_inv_Kuf => W = Luu_inv @ Kuf,
+     * beta_star => diag_inv, LA => L, URiy => Kuf @ diag_inv @ y,
+     * Alpha_ => Luu.T.inv @ L.T.inv @ L.inv @ Luu.inv @ URiy (L.inv @ Luu.inv @ URiy = L_inv_W_d_inv_y)
      * */
     alpha_ = 1e-6;
     double sigma_n = likelihood_varience;
-    Eigen::MatrixXd K_uu = kernel_->evaluate(m_inducing_point);
-    Eigen::MatrixXd Knn = kernel_->k_diag(X_train_); // FIRST IMPLEMENT THIS
-    Eigen::MatrixXd Knm = kernel_->evaluate(X_train_, m_inducing_point);
-    K_uu += Eigen::MatrixXd::Identity(K_uu.rows(), K_uu.cols()) * alpha_;
-    Eigen::MatrixXd Lm, K_uui;
+    Eigen::MatrixXd Kuu = kernel_->evaluate(m_inducing_point);
+    Eigen::MatrixXd Kff = kernel_->k_diag(X_train_); // FIRST IMPLEMENT THIS
+    Eigen::MatrixXd Kfu = kernel_->evaluate(X_train_, m_inducing_point);
+    Kuu += Eigen::MatrixXd::Identity(Kuu.rows(), Kuu.cols()) * alpha_;
+    Eigen::MatrixXd Luu, Kuu_inv;
 
-    Eigen::LLT<Eigen::MatrixXd> LowerK_uu = K_uu.llt();
-    Lm = LowerK_uu.matrixL();
-    K_uui = LowerK_uu.solve(Eigen::MatrixXd::Identity(Lm.rows(), Lm.cols()));
+    Eigen::LLT<Eigen::MatrixXd> LowerK_uu = Kuu.llt();
+    Luu = LowerK_uu.matrixL();
+    Kuu_inv = LowerK_uu.solve(Eigen::MatrixXd::Identity(Luu.rows(), Luu.cols()));
 
-    Eigen::MatrixXd Lmi = Lm.triangularView<Eigen::Lower>().solve(Eigen::MatrixXd::Identity(Lm.rows(), Lm.cols()));
+    Eigen::MatrixXd Luu_inv = Luu.triangularView<Eigen::Lower>().solve(Eigen::MatrixXd::Identity(Luu.rows(), Luu.cols()));
     
     // compute beta_star
-    Eigen::MatrixXd LiUT = Lmi * Knm.transpose();
-    Eigen::MatrixXd beta_star = 1.0 / (Knn.array() + sigma_n - LiUT.colwise().squaredNorm().transpose().array());// - LiUT.colwise().squaredNorm().array();Knn.array() + sigma_n
-    Eigen::MatrixXd beta_star_sqrt = LiUT.array() * beta_star.array().sqrt().transpose().replicate(LiUT.rows(), 1);
-    Eigen::MatrixXd A = beta_star_sqrt * beta_star_sqrt.transpose() + Eigen::MatrixXd::Identity(K_uu.rows(), K_uu.cols());
+    Eigen::MatrixXd Luu_inv_Kuf = Luu_inv * Kfu.transpose();
+    Eigen::MatrixXd beta_star = 1.0 / (Kff.array() + sigma_n - Luu_inv_Kuf.colwise().squaredNorm().transpose().array());// - Luu_inv_Kuf.colwise().squaredNorm().array();Kff.array() + sigma_n
+    Eigen::MatrixXd beta_star_sqrt = Luu_inv_Kuf.array() * beta_star.array().sqrt().transpose().replicate(Luu_inv_Kuf.rows(), 1);
+    Eigen::MatrixXd A = beta_star_sqrt * beta_star_sqrt.transpose() + Eigen::MatrixXd::Identity(Kuu.rows(), Kuu.cols());
     Eigen::MatrixXd LA;
 
     Eigen::LLT<Eigen::MatrixXd> LA_LLT = A.llt();
     LA = LA_LLT.matrixL();
 
     // back substutue
-    Eigen::MatrixXd URiy = (Knm.array() * beta_star.array().replicate(1, Knm.cols())).matrix().transpose() * y_train_; //beta_star.array().replicate() Knm.array().transpose()
-    Eigen::MatrixXd tmp1 = Lm.triangularView<Eigen::Lower>().solve(URiy);
+    Eigen::MatrixXd URiy = (Kfu.array() * beta_star.array().replicate(1, Kfu.cols())).matrix().transpose() * y_train_; //beta_star.array().replicate() Kfu.array().transpose()
+    Eigen::MatrixXd tmp1 = Luu.triangularView<Eigen::Lower>().solve(URiy);
     Eigen::MatrixXd B = LA.triangularView<Eigen::Lower>().solve(tmp1);
     Eigen::MatrixXd tmp2 = LA.transpose().triangularView<Eigen::Upper>().solve(B);
-    Alpha_ = Lm.transpose().triangularView<Eigen::Upper>().solve(tmp2);
-    Eigen::MatrixXd tmp3 = LA.triangularView<Eigen::Lower>().solve(Lmi);
+    Alpha_ = Luu.transpose().triangularView<Eigen::Upper>().solve(tmp2);
+    Eigen::MatrixXd tmp3 = LA.triangularView<Eigen::Lower>().solve(Luu_inv);
     Eigen::MatrixXd P = tmp3.transpose() * tmp3;
-    woodbury_inv = K_uui - P;
+    woodbury_inv = Kuu_inv - P;
 
-    // std::cout << "\nK_uu is:\n" << K_uu << '\n';
-    // std::cout << "\nKnn is:\n" << Knn << '\n';
-    // std::cout << "\nKnm is:\n" << Knm << '\n';
-    // std::cout << "\nLm is:\n" << Lm << '\n';
-    // std::cout << "\nLmi is:\n" << Lmi << '\n';
-    // std::cout << "\nK_uui is:\n" << K_uui << '\n';
-    // std::cout << "\nLiUT is:\n" << LiUT << '\n';
+    // std::cout << "\nK_uu is:\n" << Kuu << '\n';
+    // std::cout << "\nKnn is:\n" << Kff << '\n';
+    // std::cout << "\nKnm is:\n" << Kfu << '\n';
+    // std::cout << "\nLm is:\n" << Luu << '\n';
+    // std::cout << "\nLmi is:\n" << Luu_inv << '\n';
+    // std::cout << "\nK_uui is:\n" << Kuu_inv << '\n';
+    // std::cout << "\nLiUT is:\n" << Luu_inv_Kuf << '\n';
     // std::cout << "\nbeta_star is:\n" << beta_star << '\n';
     // std::cout << "\nbeta_star_sqrt is:\n" << beta_star_sqrt << '\n';
     // std::cout << "\nA is:\n" << A << '\n';
