@@ -67,10 +67,10 @@ target_include_directories(MathLibrary PUBLIC include)
 
 # You have to use this in this pc (lab pc), while my own pc can skip this line by using 
 # 
-target_link_libraries (MathLibrary Eigen3::Eigen)
-target_link_libraries (UtilsLibrary Eigen3::Eigen)
-target_link_libraries (KernelsLibrary MathLibrary)
-target_link_libraries (GPRLibrary KernelsLibrary UtilsLibrary)
+target_link_libraries(MathLibrary Eigen3::Eigen)
+target_link_libraries(UtilsLibrary Eigen3::Eigen)
+target_link_libraries(KernelsLibrary MathLibrary)
+target_link_libraries(GPRLibrary KernelsLibrary UtilsLibrary)
 
 add_executable(kernel_test src/kernel_test.cpp)
 target_link_libraries(kernel_test GPRLibrary)

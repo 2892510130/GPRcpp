@@ -3,6 +3,7 @@
 #include <Eigen/Dense>
 #include <vector>
 #include "gprs/sparse_gpr.h"
+#include "gprs/variational_gpr.h"
 #include "gprs/exact_gpr.h"
 #include "utils/file_operation.h"
 #include <chrono>
@@ -11,19 +12,21 @@
 using namespace GPRcpp;
 
 void update_cov(Eigen::MatrixXd & cov_before, double new_cov, bool update_covarianceconst, const Eigen::MatrixXd & covariance);
-
 void test_uncertainty_propagation();
-
 void test_uncertainty_propagation_20_times();
-
 void test_with_minimal_data();
-
 void test_with_big_data(int iteration);
-
 void test_for_py_simulator(int sparse_method = 0);
+void test_variational_gpr(int sparse_method = 0);
+void random_test();
 
-int main(int argc, char *argv[]) 
+int main(int argc, char *argv[])
 {
+    if (argc == 1)
+    {
+        std::cout << "You should select one task!\n";
+    }
+
     if (atoi(argv[1]) == 0)
     {
         std::cout << "You have select minimal data test!" << '\n';
@@ -51,50 +54,129 @@ int main(int argc, char *argv[])
         if (argc > 2) sparse_method = atoi(argv[2]);
         test_for_py_simulator(sparse_method);
     }
+    else if (atoi(argv[1]) == 5)
+    {
+        std::cout << "You have select variational gpr test!" << '\n';
+        int sparse_method = 0;
+        if (argc > 2) sparse_method = atoi(argv[2]);
+        test_variational_gpr(sparse_method);
+    }
+    else if (atoi(argv[1]) == 100)
+    {
+        std::cout << "You have select random test!" << '\n';
+        random_test();
+    }
 
     return 0;
 }
 
-void test_for_py_simulator(int sparse_method)
+void random_test()
+{
+    Eigen::MatrixXd A = Eigen::MatrixXd::Random(2, 4);
+    Eigen::MatrixXd B = Eigen::MatrixXd::Random(1, 4);
+    Eigen::MatrixXd C = A.array() * B.array().replicate(2, 1);
+    std::cout << "[GPRTest]: A is\n" << A << "\n";
+    std::cout << "[GPRTest]: B is\n" << B << "\n";
+    std::cout << "[GPRTest]: C is\n" << C << "\n";
+    std::cout << "[GPRTest]: C with shape (" << C.rows() << ", " << C.cols() << ")\n";
+}
+
+void test_variational_gpr(int sparse_method)
 {
     std::string file_path = "C:/Users/pc/Desktop/Personal/Code/GPRcpp/Log/py.txt";
-    GPData data = read_sparse_gp_data_from_file(file_path, 12, 2, 129, 40, true);
+    GPData data = read_sparse_gp_data_from_file(file_path, 12, 2, 260, 40, true);
     bool normalize_gpr = true;
 
     // Read for state v
     Eigen::RowVectorXd ard_length_scale_v = Eigen::RowVectorXd(12);
-    ard_length_scale_v << 0.14262398286403705, 15.347526358466826, 0.965777312794053, 17.382834917506045, 3.0938293556819376, 7.52548756901615, 7.2464594032077665, 13.605523567836714, 3.174681803889279, 4.728858179375551, 0.9709302889247808, 12.781116298767273;
-    std::shared_ptr<kernel_base> constant_kernel_ptr_v = std::make_shared<constant_kernel>(6.994427226495026);
+    ard_length_scale_v << 0.8658335733313588, 13.322692325094174, 6.407021934587417, 14.430933792473933, 0.8262508642621557, 12.956010458686743, 14.755220096026246, 17.347816965479478, 2.1033703167736517, 13.100624005598226, 14.435174572545298, 17.816198438786444;
+    std::shared_ptr<kernel_base> constant_kernel_ptr_v = std::make_shared<constant_kernel>(15.938946986819923);
     std::shared_ptr<kernel_base> rbf_kernel_ptr_v = std::make_shared<rbf_kernel>(ard_length_scale_v);
 	std::shared_ptr<kernel_base> my_kernel_v = std::make_shared<product_kernel>(constant_kernel_ptr_v, rbf_kernel_ptr_v);
 
-    SparseGPR spgp_v(my_kernel_v, normalize_gpr);
-    spgp_v.likelihood_varience = 0.10276029249210838;
+    VariationalGPR spgp_v(my_kernel_v, normalize_gpr);
+    spgp_v.likelihood_varience = 0.00026610989521133605;
     if (sparse_method != 0) spgp_v.inference_method = 1;
     spgp_v.fit(data.m_feature, data.m_output.col(0), data.m_inducing_points);
 	
     // Read for state w
     Eigen::RowVectorXd ard_length_scale_w = Eigen::RowVectorXd(12);
-    ard_length_scale_w << 359.0152783762107, 7.645096386212836, 361.3205472864519, 51.631464829145116, 363.64511914908553, 397.7885897266975, 475.045676162974, 633.1474014306848, 318.0744148727092, 7.555457111478175, 580.4603250244658, 261.4863448698691;
-    std::shared_ptr<kernel_base> constant_kernel_ptr_w = std::make_shared<constant_kernel>(851.377738351321);
+    // ard_length_scale_w << 179.89783828567562, 5.3518386878180575, 278.8128680361318, 37.15662167141493, 171.78692980352864, 176.27457390169434, 272.41892243231155, 258.7789715555678, 184.1016212824687, 5.335272339533333, 287.0791355720346, 220.52174051242275;
+    ard_length_scale_w << 0.8658335733313588, 13.322692325094174, 6.407021934587417, 14.430933792473933, 0.8262508642621557, 12.956010458686743, 14.755220096026246, 17.347816965479478, 2.1033703167736517, 13.100624005598226, 14.435174572545298, 17.816198438786444;
+    std::shared_ptr<kernel_base> constant_kernel_ptr_w = std::make_shared<constant_kernel>(15.938946986819923);//278.27107082447924
     std::shared_ptr<kernel_base> rbf_kernel_ptr_w = std::make_shared<rbf_kernel>(ard_length_scale_w);
 	std::shared_ptr<kernel_base> my_kernel_w = std::make_shared<product_kernel>(constant_kernel_ptr_w, rbf_kernel_ptr_w);
 
-    SparseGPR spgp_w(my_kernel_w, normalize_gpr);
-    spgp_w.likelihood_varience = 0.004372263083734497;
+    VariationalGPR spgp_w(my_kernel_w, normalize_gpr);
+    spgp_w.likelihood_varience = 0.00026610989521133605;//3.5873462385031854e-05
     if (sparse_method != 0) spgp_w.inference_method = 1;
     spgp_w.fit(data.m_feature, data.m_output.col(1), data.m_inducing_points_additional);
 
     // Check mean and var
-    Eigen::MatrixXd x_test = Eigen::MatrixXd::Zero(1, 12);
-    auto result_v = spgp_v.predict(x_test, true, true);
-    auto result_w = spgp_w.predict(x_test, true, true);
+    Eigen::MatrixXd x_test = spgp_v.X_train_.block(0, 0, 4, spgp_v.X_train_.cols());
+    std::cout << "----------------------------\n";
+    auto result_v = spgp_v.predict(x_test, true, false);
+    auto result_w = spgp_w.predict(x_test, true, false);
     std::cout << "Mean result_v:\n" << result_v.y_mean << '\n';
     std::cout << "Cov result_v:\n" << result_v.y_cov << '\n';
     std::cout << "Mean result_w:\n" << result_w.y_mean << '\n';
     std::cout << "Cov result_w:\n" << result_w.y_cov << '\n';
-    std::cout << "dmu_dv:\n" << result_v.dmu_dx.transpose() << '\n';
-    std::cout << "dmu_dw:\n" << result_w.dmu_dx.transpose() << '\n';
+    // std::cout << "dmu_dv:\n" << result_v.dmu_dx.transpose() << '\n';
+    // std::cout << "dmu_dw:\n" << result_w.dmu_dx.transpose() << '\n';
+    Eigen::MatrixXd x_test2 = Eigen::MatrixXd::Zero(1, 12);
+    x_test2 << 0.00980392,0.0155402,0.192157,   0.304279,     0.0025, 0.00396425,        0.1,    0.15854,          0,          0,          0,          0;
+    auto result_v2 = spgp_v.predict(x_test2, true, false);
+    std::cout << "Mean result_v 2:\n" << result_v2.y_mean << '\n';
+    std::cout << "Cov result_v 2:\n" << result_v2.y_cov << '\n';
+}
+
+void test_for_py_simulator(int sparse_method)
+{
+    std::string file_path = "C:/Users/pc/Desktop/Personal/Code/GPRcpp/Log/py.txt";
+    GPData data = read_sparse_gp_data_from_file(file_path, 12, 2, 260, 40, true);
+    bool normalize_gpr = true;
+
+    // Read for state v
+    Eigen::RowVectorXd ard_length_scale_v = Eigen::RowVectorXd(12);
+    ard_length_scale_v << 0.8658335733313588, 13.322692325094174, 6.407021934587417, 14.430933792473933, 0.8262508642621557, 12.956010458686743, 14.755220096026246, 17.347816965479478, 2.1033703167736517, 13.100624005598226, 14.435174572545298, 17.816198438786444;
+    std::shared_ptr<kernel_base> constant_kernel_ptr_v = std::make_shared<constant_kernel>(15.938946986819923);
+    std::shared_ptr<kernel_base> rbf_kernel_ptr_v = std::make_shared<rbf_kernel>(ard_length_scale_v);
+	std::shared_ptr<kernel_base> my_kernel_v = std::make_shared<product_kernel>(constant_kernel_ptr_v, rbf_kernel_ptr_v);
+
+    SparseGPR spgp_v(my_kernel_v, normalize_gpr);
+    spgp_v.likelihood_varience = 0.00026610989521133605;
+    if (sparse_method != 0) spgp_v.inference_method = 1;
+    spgp_v.fit(data.m_feature, data.m_output.col(0), data.m_inducing_points);
+	
+    // Read for state w
+    Eigen::RowVectorXd ard_length_scale_w = Eigen::RowVectorXd(12);
+    // ard_length_scale_w << 179.89783828567562, 5.3518386878180575, 278.8128680361318, 37.15662167141493, 171.78692980352864, 176.27457390169434, 272.41892243231155, 258.7789715555678, 184.1016212824687, 5.335272339533333, 287.0791355720346, 220.52174051242275;
+    ard_length_scale_w << 0.8658335733313588, 13.322692325094174, 6.407021934587417, 14.430933792473933, 0.8262508642621557, 12.956010458686743, 14.755220096026246, 17.347816965479478, 2.1033703167736517, 13.100624005598226, 14.435174572545298, 17.816198438786444;
+    std::shared_ptr<kernel_base> constant_kernel_ptr_w = std::make_shared<constant_kernel>(15.938946986819923);//278.27107082447924
+    std::shared_ptr<kernel_base> rbf_kernel_ptr_w = std::make_shared<rbf_kernel>(ard_length_scale_w);
+	std::shared_ptr<kernel_base> my_kernel_w = std::make_shared<product_kernel>(constant_kernel_ptr_w, rbf_kernel_ptr_w);
+
+    SparseGPR spgp_w(my_kernel_w, normalize_gpr);
+    spgp_w.likelihood_varience = 0.00026610989521133605;//3.5873462385031854e-05
+    if (sparse_method != 0) spgp_w.inference_method = 1;
+    spgp_w.fit(data.m_feature, data.m_output.col(1), data.m_inducing_points_additional);
+
+    // Check mean and var
+    Eigen::MatrixXd x_test = spgp_v.X_train_.block(0, 0, 4, spgp_v.X_train_.cols());
+    std::cout << "----------------------------\n";
+    auto result_v = spgp_v.predict(x_test, true, false);
+    auto result_w = spgp_w.predict(x_test, true, false);
+    std::cout << "Mean result_v:\n" << result_v.y_mean << '\n';
+    std::cout << "Cov result_v:\n" << result_v.y_cov << '\n';
+    std::cout << "Mean result_w:\n" << result_w.y_mean << '\n';
+    std::cout << "Cov result_w:\n" << result_w.y_cov << '\n';
+    // std::cout << "dmu_dv:\n" << result_v.dmu_dx.transpose() << '\n';
+    // std::cout << "dmu_dw:\n" << result_w.dmu_dx.transpose() << '\n';
+    Eigen::MatrixXd x_test2 = Eigen::MatrixXd::Zero(1, 12);
+    x_test2 << 0.00980392,0.0155402,0.192157,   0.304279,     0.0025, 0.00396425,        0.1,    0.15854,          0,          0,          0,          0;
+    auto result_v2 = spgp_v.predict(x_test2, true, false);
+    std::cout << "Mean result_v 2:\n" << result_v2.y_mean << '\n';
+    std::cout << "Cov result_v 2:\n" << result_v2.y_cov << '\n';
 }
 
 /*

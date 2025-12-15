@@ -81,25 +81,26 @@ class GaussianModel:
 def test():
     gaussian_opts = {
         "path": "C:\\Users\\pc\\Desktop\\Personal\\Code\\GPRcpp\\Log\\py.txt",
-        "total_data_number": 129,
+        "total_data_number": 260,
         "inducing_data_number": 40,
         "input_window": 3,
         "lagacy": True,
         "gpr_method": 1,
         "enable_test": False,
-        "param_v": [0.10276029249210838, 6.994427226495026, 0.14262398286403705, 15.347526358466826, 0.965777312794053, 17.382834917506045, 3.0938293556819376, 7.52548756901615, 7.2464594032077665, 13.605523567836714, 3.174681803889279, 4.728858179375551, 0.9709302889247808, 12.781116298767273],
-        "param_w": [0.004372263083734497, 851.377738351321, 359.0152783762107, 7.645096386212836, 361.3205472864519, 51.631464829145116, 363.64511914908553, 397.7885897266975, 475.045676162974, 633.1474014306848, 318.0744148727092, 7.555457111478175, 580.4603250244658, 261.4863448698691],
+        "param_v": [0.00026610989521133605, 15.938946986819923, 0.8658335733313588, 13.322692325094174, 6.407021934587417, 14.430933792473933, 0.8262508642621557, 12.956010458686743, 14.755220096026246, 17.347816965479478, 2.1033703167736517, 13.100624005598226, 14.435174572545298, 17.816198438786444],
+        "param_w": [0.00026610989521133605, 15.938946986819923, 0.8658335733313588, 13.322692325094174, 6.407021934587417, 14.430933792473933, 0.8262508642621557, 12.956010458686743, 14.755220096026246, 17.347816965479478, 2.1033703167736517, 13.100624005598226, 14.435174572545298, 17.816198438786444],
+        # "param_w": [3.5873462385031854e-05, 278.27107082447924, 179.89783828567562, 5.3518386878180575, 278.8128680361318, 37.15662167141493, 171.78692980352864, 176.27457390169434, 272.41892243231155, 258.7789715555678, 184.1016212824687, 5.335272339533333, 287.0791355720346, 220.52174051242275],
     }
 
     model = GaussianModel(gaussian_opts=gaussian_opts)
 
-    x_test = np.zeros((1, 12))
-    mean_v, cov_v = model.sparse_model_v.predict_noiseless(x_test)
-    mean_w, cov_w = model.sparse_model_w.predict_noiseless(x_test)
+    x_test = model.sparse_model_v.X[:4]
+    mean_v, cov_v = model.sparse_model_v.predict_noiseless(x_test, full_cov=True)
+    mean_w, cov_w = model.sparse_model_w.predict_noiseless(x_test, full_cov=True)
     print("Mean result_v:\n", mean_v.squeeze())
-    print("Cov result_v:\n", cov_v.squeeze())
+    print("Cov result_v:\n", cov_v)
     print("Mean result_w:\n", mean_w.squeeze())
-    print("Cov result_w:\n", cov_w.squeeze())
+    print("Cov result_w:\n", cov_w)
 
     dk_dv, dk_dw = model.dk_dx(x_test)
     dmu_dv = model.sparse_model_v.normalizer.inverse_mean(dk_dv.T @ model.sparse_model_v.posterior.woodbury_vector) - model.sparse_model_v.normalizer.inverse_mean(0.0)

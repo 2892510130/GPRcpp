@@ -12,18 +12,17 @@
             "name": "C/C++: g++.exe build and debug active file",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/debug_build/gpr_test.exe",
+            "program": "${workspaceFolder}/build/AMD64/Debug/bin/gpr_test.exe",
             "args": [
-                "200",
                 "4",
-                "200"
+                "0",
             ],
             "stopAtEntry": false,
             "cwd": "${fileDirname}",
             "environment": [],
             "externalConsole": false,
             "MIMode": "gdb",
-            "miDebuggerPath": "C:\\Users\\pc\\Desktop\\Tools\\mingw64\\bin\\gdb.exe",
+            "miDebuggerPath": "C:\\Users\\pc\\Desktop\\Tools\\Mingw64-latest\\mingw64\\bin\\gdb.exe",
             "setupCommands": [
                 {
                     "description": "Enable pretty-printing for gdb",

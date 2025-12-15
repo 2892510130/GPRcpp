@@ -41,7 +41,7 @@ public:
 public:
     std::shared_ptr<kernel_base> kernel_;
     int inference_method = 0;
-    double alpha_ = 1e-8; // For the robustness of the llt decomp of the K(X, X) matrix, and act as a noise too.
+    double alpha_ = 1e-6; // For the robustness of the llt decomp of the K(X, X) matrix, and act as a noise too.
     double likelihood_varience = 1.0;
     Eigen::MatrixXd L_; // LL^T = K(X, X) for exact gpr
     Eigen::MatrixXd Alpha_; // Alpha_ = K^{-1} * y

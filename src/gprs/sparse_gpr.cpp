@@ -170,7 +170,7 @@ gpr_results SparseGPR::predict(const Eigen::MatrixXd & X_test, bool return_cov, 
 
         if (compute_jac)
         {
-            const Eigen::MatrixXd dk_dx =  kernel_->dk_dx(m_inducing_point, X_test);
+            const Eigen::MatrixXd dk_dx = kernel_->dk_dx(m_inducing_point, X_test);
             results_.dmu_dx = dk_dx.transpose() * Alpha_;
             if (normalize_y_)
             {
@@ -212,7 +212,7 @@ gpr_results SparseGPR::predict_at_uncertain_input(const Eigen::MatrixXd & X_test
         certain_predict.dmu_dx = (certain_predict.dmu_dx.array().rowwise() * y_train_std_.array());
     }
 
-    double first_order_varience = (certain_predict.dmu_dx.transpose() * input_cov * certain_predict.dmu_dx)(0);
+    // double first_order_varience = (certain_predict.dmu_dx.transpose() * input_cov * certain_predict.dmu_dx)(0);
 
     if (add_covariance)
     {
@@ -221,11 +221,11 @@ gpr_results SparseGPR::predict_at_uncertain_input(const Eigen::MatrixXd & X_test
 
     if (normalize_y_)
     {
-        first_order_varience = first_order_varience * y_train_std_(0) * y_train_std_(0); // Only for 1D output.
+        // first_order_varience = first_order_varience * y_train_std_(0) * y_train_std_(0); // Only for 1D output.
         if (add_covariance) certain_predict.y_covariance = certain_predict.y_covariance * y_train_std_(0) * y_train_std_(0);
     }
 
-    certain_predict.y_cov(0, 0) += first_order_varience;
+    // certain_predict.y_cov(0, 0) += first_order_varience;
 
     // std::cout << "[ExactGPR]: dmu_dx.T * input_cov is:\n" << certain_predict.y_covariance << '\n';
     // std::cout << "[ExactGPR]: dk_dx is:\n" << dk_dx << '\n';
