@@ -34,10 +34,6 @@ public:
 
     virtual gpr_results predict(const Eigen::MatrixXd & X_test, bool return_cov, bool compute_jac = false) = 0;
 
-    virtual gpr_results predict_at_uncertain_input(const Eigen::MatrixXd & X_test, const Eigen::MatrixXd & input_cov) = 0;
-
-    virtual gpr_results predict_at_uncertain_input(const Eigen::MatrixXd & X_test, const Eigen::MatrixXd & input_cov, bool add_covariance, bool add_second_order_variance) = 0;
-
 public:
     std::shared_ptr<kernel_base> kernel_;
     int inference_method = 0;
@@ -47,8 +43,8 @@ public:
     Eigen::MatrixXd Alpha_; // Alpha_ = K^{-1} * y
     bool has_x_train_;
     bool normalize_y_ = false;
-    Eigen::MatrixXd X_train_;
-    Eigen::MatrixXd y_train_;
+    Eigen::MatrixXd m_X_train;
+    Eigen::MatrixXd m_y_train;
     Eigen::RowVectorXd y_train_mean_;
     Eigen::RowVectorXd y_train_std_;
     gpr_results results_;

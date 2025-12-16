@@ -117,8 +117,8 @@ class my_GaussianProcessRegressor(MultiOutputMixin, RegressorMixin, BaseEstimato
                     f"entries as y. ({self.alpha.shape[0]} != {y.shape[0]})"
                 )
 
-        self.X_train_ = np.copy(X) if self.copy_X_train else X
-        self.y_train_ = np.copy(y) if self.copy_X_train else y
+        self.m_X_train = np.copy(X) if self.copy_X_train else X
+        self.m_y_train = np.copy(y) if self.copy_X_train else y
 
         if self.optimizer is not None and self.kernel_.n_dims > 0:
             # Choose hyperparameters based on maximizing the log-marginal
@@ -171,7 +171,7 @@ class my_GaussianProcessRegressor(MultiOutputMixin, RegressorMixin, BaseEstimato
         # of actual query points
         # Alg. 2.1, page 19, line 2 -> L = cholesky(K + sigma^2 I)
         start_time = time.perf_counter()
-        K = self.kernel_(self.X_train_)
+        K = self.kernel_(self.m_X_train)
         end_time = time.perf_counter()
         if DEBUG_KERNEL:
             print("Time in fit K: ", end_time - start_time)
@@ -179,8 +179,8 @@ class my_GaussianProcessRegressor(MultiOutputMixin, RegressorMixin, BaseEstimato
         if DEBUG_KERNEL:
             print("In the my gpr: ")
             print("K: ", K)
-            print("X_train_: ", self.X_train_)
-            print("y_train_: ", self.y_train_)
+            print("m_X_train: ", self.m_X_train)
+            print("m_y_train: ", self.m_y_train)
         try:
             self.L_ = cholesky(K, lower=GPR_CHOLESKY_LOWER, check_finite=False)
         except np.linalg.LinAlgError as exc:
@@ -194,7 +194,7 @@ class my_GaussianProcessRegressor(MultiOutputMixin, RegressorMixin, BaseEstimato
             raise
         # Alg 2.1, page 19, line 3 -> alpha = L^T \ (L \ y)
         temp1 = solve_triangular(
-                self.L_, self.y_train_, lower=GPR_CHOLESKY_LOWER, check_finite=False
+                self.L_, self.m_y_train, lower=GPR_CHOLESKY_LOWER, check_finite=False
             )
         temp2 = solve_triangular(
                 self.L_.T, temp1, lower=False, check_finite=False
@@ -202,7 +202,7 @@ class my_GaussianProcessRegressor(MultiOutputMixin, RegressorMixin, BaseEstimato
 
         self.alpha_ = cho_solve(
             (self.L_, GPR_CHOLESKY_LOWER),
-            self.y_train_,
+            self.m_y_train,
             check_finite=False,
         )
         if DEBUG_KERNEL:
@@ -225,7 +225,7 @@ class my_GaussianProcessRegressor(MultiOutputMixin, RegressorMixin, BaseEstimato
 
         X = self._validate_data(X, ensure_2d=ensure_2d, dtype=dtype, reset=False)
 
-        if not hasattr(self, "X_train_"):  # Unfitted;predict based on GP prior
+        if not hasattr(self, "m_X_train"):  # Unfitted;predict based on GP prior
             if self.kernel is None:
                 kernel = C(1.0, constant_value_bounds="fixed") * RBF(
                     1.0, length_scale_bounds="fixed"
@@ -254,7 +254,7 @@ class my_GaussianProcessRegressor(MultiOutputMixin, RegressorMixin, BaseEstimato
                 return y_mean
         else:  # Predict based on GP posterior
             # Alg 2.1, page 19, line 4 -> f*_bar = K(X_test, X_train) . alpha
-            K_trans = self.kernel_(X, self.X_train_)
+            K_trans = self.kernel_(X, self.m_X_train)
             y_mean = K_trans @ self.alpha_
 
             # undo normalisation
@@ -346,9 +346,9 @@ class my_GaussianProcessRegressor(MultiOutputMixin, RegressorMixin, BaseEstimato
             kernel.theta = theta
 
         if eval_gradient:
-            K, K_gradient = kernel(self.X_train_, eval_gradient=True)
+            K, K_gradient = kernel(self.m_X_train, eval_gradient=True)
         else:
-            K = kernel(self.X_train_)
+            K = kernel(self.m_X_train)
 
         # Alg. 2.1, page 19, line 2 -> L = cholesky(K + sigma^2 I)
         K[np.diag_indices_from(K)] += self.alpha
@@ -357,8 +357,8 @@ class my_GaussianProcessRegressor(MultiOutputMixin, RegressorMixin, BaseEstimato
         except np.linalg.LinAlgError:
             return (-np.inf, np.zeros_like(theta)) if eval_gradient else -np.inf
 
-        # Support multi-dimensional output of self.y_train_
-        y_train = self.y_train_
+        # Support multi-dimensional output of self.m_y_train
+        y_train = self.m_y_train
         if y_train.ndim == 1:
             y_train = y_train[:, np.newaxis]
 

@@ -15,13 +15,19 @@ public:
     void fit_with_fitc();
     gpr_results predict(const Eigen::MatrixXd & X_test) override;
     gpr_results predict(const Eigen::MatrixXd & X_test, bool return_cov, bool compute_jac = false) override;
-    gpr_results predict_at_uncertain_input(const Eigen::MatrixXd & X_test, const Eigen::MatrixXd & input_cov) override;
-    gpr_results predict_at_uncertain_input(const Eigen::MatrixXd & X_test, const Eigen::MatrixXd & input_cov, bool add_covariance, bool add_second_order_variance) override;
+    gpr_results predict_cholesky(const Eigen::MatrixXd & X_test, bool return_cov, bool compute_jac = false);
+
+    void add_new_data(const Eigen::MatrixXd & X_new, const Eigen::MatrixXd & Y_new);
+    void remove_data(int remove_number = 1);
+    void add_new_inducing_data(const Eigen::MatrixXd & U_new);
+    void update_L();
+    void add_mu_su(const Eigen::MatrixXd & Kun, const Eigen::MatrixXd & Knn);
+    void update_mu_su(const Eigen::MatrixXd & X_new, const Eigen::MatrixXd & Y_new);
 
 public:
     Eigen::MatrixXd m_inducing_point;
 
-    size_t m_N, m_M;
+    size_t m_N, m_M, m_D;
 
     Eigen::MatrixXd m_Luu;
     Eigen::MatrixXd m_mu;

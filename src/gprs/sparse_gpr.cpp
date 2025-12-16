@@ -9,15 +9,15 @@ void SparseGPR::fit(const Eigen::MatrixXd & X_train, const Eigen::MatrixXd & y_t
 {
     std::cout << "[GPR INFO]: fitting sparse GPR with method " << inference_method << '\n';
     has_x_train_ = true;
-    X_train_ = X_train;
-    y_train_ = y_train;
+    m_X_train = X_train;
+    m_y_train = y_train;
     m_inducing_point = inducing_points;
 
     if (normalize_y_)
     {
-        y_train_mean_ = y_train_.colwise().mean();
-        y_train_std_ = ((y_train_.rowwise() - y_train_mean_).array().square().colwise().sum() / y_train_.rows()).sqrt();
-        y_train_ = (y_train_.rowwise() - y_train_mean_).array().rowwise() / y_train_std_.array();
+        y_train_mean_ = m_y_train.colwise().mean();
+        y_train_std_ = ((m_y_train.rowwise() - y_train_mean_).array().square().colwise().sum() / m_y_train.rows()).sqrt();
+        m_y_train = (m_y_train.rowwise() - y_train_mean_).array().rowwise() / y_train_std_.array();
     }
 
     if (inference_method == 0) fit_with_dtc();
@@ -35,7 +35,7 @@ void SparseGPR::fit_with_dtc()
     double inv_sigma = 1.0 / fmax(likelihood_varience, alpha_);
 
     // Get Kuu and Luu from the inducing points
-    Eigen::MatrixXd inv_sigma_Y = inv_sigma * y_train_; // (Y - mean) if mean is not 0
+    Eigen::MatrixXd inv_sigma_Y = inv_sigma * m_y_train; // (Y - mean) if mean is not 0
     // double trYYT = inv_sigma_Y.squaredNorm(); // What this for?
     Eigen::MatrixXd Kuu = kernel_->evaluate(m_inducing_point);
     Kuu = (Kuu + Kuu.transpose()) / 2 + Eigen::MatrixXd::Identity(Kuu.rows(), Kuu.cols()) * alpha_;
@@ -43,7 +43,7 @@ void SparseGPR::fit_with_dtc()
     Eigen::LLT<Eigen::MatrixXd> LowerK_uu = Kuu.llt();
 
     // Compute psi stats and factor B
-    Eigen::MatrixXd Kfu = kernel_->evaluate(X_train_, m_inducing_point);
+    Eigen::MatrixXd Kfu = kernel_->evaluate(m_X_train, m_inducing_point);
     Eigen::MatrixXd tmp1 = Kfu * sqrt(inv_sigma);
     Eigen::MatrixXd tmp2 = LowerK_uu.matrixL().solve(tmp1.transpose());
     Eigen::MatrixXd B = tmp2 * tmp2.transpose() + Eigen::MatrixXd::Identity(Kuu.rows(), Kuu.cols()); // If you want to compute log margin, seperate this
@@ -92,8 +92,8 @@ void SparseGPR::fit_with_fitc()
     alpha_ = 1e-6;
     double sigma_n = likelihood_varience;
     Eigen::MatrixXd Kuu = kernel_->evaluate(m_inducing_point);
-    Eigen::MatrixXd Kff = kernel_->k_diag(X_train_); // FIRST IMPLEMENT THIS
-    Eigen::MatrixXd Kfu = kernel_->evaluate(X_train_, m_inducing_point);
+    Eigen::MatrixXd Kff = kernel_->k_diag(m_X_train); // FIRST IMPLEMENT THIS
+    Eigen::MatrixXd Kfu = kernel_->evaluate(m_X_train, m_inducing_point);
     Kuu += Eigen::MatrixXd::Identity(Kuu.rows(), Kuu.cols()) * alpha_;
     Eigen::MatrixXd Luu, Kuu_inv;
 
@@ -114,7 +114,7 @@ void SparseGPR::fit_with_fitc()
     LA = LA_LLT.matrixL();
 
     // back substutue
-    Eigen::MatrixXd URiy = (Kfu.array() * beta_star.array().replicate(1, Kfu.cols())).matrix().transpose() * y_train_; //beta_star.array().replicate() Kfu.array().transpose()
+    Eigen::MatrixXd URiy = (Kfu.array() * beta_star.array().replicate(1, Kfu.cols())).matrix().transpose() * m_y_train; //beta_star.array().replicate() Kfu.array().transpose()
     Eigen::MatrixXd tmp1 = Luu.triangularView<Eigen::Lower>().solve(URiy);
     Eigen::MatrixXd B = LA.triangularView<Eigen::Lower>().solve(tmp1);
     Eigen::MatrixXd tmp2 = LA.transpose().triangularView<Eigen::Upper>().solve(B);
@@ -193,49 +193,6 @@ gpr_results SparseGPR::predict(const Eigen::MatrixXd & X_test, bool return_cov, 
     }
 }
 
-gpr_results SparseGPR::predict_at_uncertain_input(const Eigen::MatrixXd & X_test, const Eigen::MatrixXd & input_cov)
-{
-   return predict_at_uncertain_input(X_test, input_cov, false, false);
-}
-
-gpr_results SparseGPR::predict_at_uncertain_input(const Eigen::MatrixXd & X_test, const Eigen::MatrixXd & input_cov, bool add_covariance, bool add_second_order_variance)
-{
-    if (X_test.rows() != 1) throw std::runtime_error("SparseGPR::predict_at_uncertain_input only support 1 sample input!");
-
-    gpr_results certain_predict = predict(X_test, true);
-
-    const Eigen::MatrixXd dk_dx =  kernel_->dk_dx(m_inducing_point, X_test);
-
-    certain_predict.dmu_dx = dk_dx.transpose() * Alpha_;
-    if (normalize_y_)
-    {
-        certain_predict.dmu_dx = (certain_predict.dmu_dx.array().rowwise() * y_train_std_.array());
-    }
-
-    // double first_order_varience = (certain_predict.dmu_dx.transpose() * input_cov * certain_predict.dmu_dx)(0);
-
-    if (add_covariance)
-    {
-        certain_predict.y_covariance = certain_predict.dmu_dx.transpose() * input_cov;
-    }
-
-    if (normalize_y_)
-    {
-        // first_order_varience = first_order_varience * y_train_std_(0) * y_train_std_(0); // Only for 1D output.
-        if (add_covariance) certain_predict.y_covariance = certain_predict.y_covariance * y_train_std_(0) * y_train_std_(0);
-    }
-
-    // certain_predict.y_cov(0, 0) += first_order_varience;
-
-    // std::cout << "[ExactGPR]: dmu_dx.T * input_cov is:\n" << certain_predict.y_covariance << '\n';
-    // std::cout << "[ExactGPR]: dk_dx is:\n" << dk_dx << '\n';
-    // std::cout << "[ExactGPR]: Alpha_ is:\n" << Alpha_ << '\n';
-    // std::cout << "[ExactGPR]: dmu_dx is:\n" << dmu_dx << '\n';
-    // std::cout << "[ExactGPR]: first_order_varience is:\n" << first_order_varience << '\n';
-    // std::cout << "[ExactGPR]: exact cov is:\n" << certain_predict.y_cov << '\n';
-
-    return certain_predict;
-}
 
 SparseGPR::~SparseGPR()
 {

@@ -13,7 +13,7 @@ struct GPData
 
 
 /**
- * @brief Read traning data from file to X_train_ and y_train_
+ * @brief Read traning data from file to m_X_train and m_y_train
  * @param path file path
  * @param feature_size the dimension of the features 
  * @param output_size the dimension of the outputs 
@@ -24,7 +24,7 @@ struct GPData
 GPData read_train_data_from_file(const std::string & path, size_t feature_size, size_t output_size, size_t data_number);
 
 /**
- * @brief Read traning data from file to X_train_ and y_train_
+ * @brief Read traning data from file to m_X_train and m_y_train
  * @param path file path
  * @param feature_size the dimension of the features 
  * @param output_size the dimension of the outputs 
