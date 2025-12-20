@@ -18,6 +18,9 @@ void test_with_minimal_data();
 void test_with_big_data(int iteration);
 void test_for_py_simulator(int sparse_method = 0, bool normalize_gpr = true);
 void test_variational_gpr(int sparse_method = 0, bool normalize_gpr = true);
+void test_add_data(int sparse_method = 0, bool normalize_gpr = true);
+void test_add_inducing(int sparse_method = 0, bool normalize_gpr = true);
+void test_update(int sparse_method = 0, bool normalize_gpr = true);
 void random_test();
 
 int main(int argc, char *argv[])
@@ -53,7 +56,7 @@ int main(int argc, char *argv[])
         int sparse_method = 0;
         bool normalize_gpr = true;
         if (argc > 2) sparse_method = atoi(argv[2]);
-        if (argc > 3) normalize_gpr = true ? atoi(argv[3]) == 0 : false;
+        if (argc > 3 && atoi(argv[3]) == 0) normalize_gpr = false;
         test_for_py_simulator(sparse_method, normalize_gpr);
     }
     else if (atoi(argv[1]) == 5)
@@ -62,8 +65,35 @@ int main(int argc, char *argv[])
         int sparse_method = 0;
         bool normalize_gpr = true;
         if (argc > 2) sparse_method = atoi(argv[2]);
-        if (argc > 3) normalize_gpr = true ? atoi(argv[3]) == 0 : false;
+        if (argc > 3 && atoi(argv[3]) == 0) normalize_gpr = false;
         test_variational_gpr(sparse_method, normalize_gpr);
+    }
+    else if (atoi(argv[1]) == 6)
+    {
+        std::cout << "You have select add new data test!" << '\n';
+        int sparse_method = 0;
+        bool normalize_gpr = true;
+        if (argc > 2) sparse_method = atoi(argv[2]);
+        if (argc > 3 && atoi(argv[3]) == 0) normalize_gpr = false;
+        test_add_data(sparse_method, normalize_gpr);
+    }
+    else if (atoi(argv[1]) == 7)
+    {
+        std::cout << "You have select add new inducing test!" << '\n';
+        int sparse_method = 0;
+        bool normalize_gpr = true;
+        if (argc > 2) sparse_method = atoi(argv[2]);
+        if (argc > 3 && atoi(argv[3]) == 0) normalize_gpr = false;
+        test_add_inducing(sparse_method, normalize_gpr);
+    }
+    else if (atoi(argv[1]) == 8)
+    {
+        std::cout << "You have select update test!" << '\n';
+        int sparse_method = 0;
+        bool normalize_gpr = true;
+        if (argc > 2) sparse_method = atoi(argv[2]);
+        if (argc > 3 && atoi(argv[3]) == 0) normalize_gpr = false;
+        test_update(sparse_method, normalize_gpr);
     }
     else if (atoi(argv[1]) == 100)
     {
@@ -76,18 +106,125 @@ int main(int argc, char *argv[])
 
 void random_test()
 {
+    // std::string file_path = "C:/Users/pc/Desktop/Personal/Code/GPRcpp/Log/py.txt";
+    // GPData data = read_sparse_gp_data_from_file(file_path, 12, 2, 260, 40, true);
+
+    // Eigen::RowVectorXd ard_length_scale_v = Eigen::RowVectorXd(12);
+    // ard_length_scale_v << 0.8658335733313588, 13.322692325094174, 6.407021934587417, 14.430933792473933, 
+    //                     0.8262508642621557, 12.956010458686743, 14.755220096026246, 17.347816965479478, 
+    //                     2.1033703167736517, 13.100624005598226, 14.435174572545298, 17.816198438786444;
+    // std::shared_ptr<kernel_base> rbf_kernel_ptr_v = std::make_shared<rbf_kernel>(ard_length_scale_v);
+    // Eigen::MatrixXd test_1 = data.m_feature.block(0, 0, 4, 12), test_2 = data.m_feature.block(4, 0, 1, 12);
+    // Eigen::MatrixXd dk_dx = rbf_kernel_ptr_v->dk_dx(test_1, test_2);
+
+    // std::cout << "[GPRTest]: dk_dx is\n" << dk_dx << "\n";
+
+    Eigen::MatrixXd A = Eigen::MatrixXd::Random(4, 4);
+    Eigen::MatrixXd B = A.transpose() * A;
+    std::cout << "[GPRTest]: A is\n" << A << "\n";
+    std::cout << "[GPRTest]: B is\n" << B << "\n";
+}
+
+void test_update(int sparse_method, bool normalize_gpr)
+{
+    std::cout << "[VariationalGPR Test] test with sparse_method " << sparse_method << ", and normalize is " << normalize_gpr << '\n';
     std::string file_path = "C:/Users/pc/Desktop/Personal/Code/GPRcpp/Log/py.txt";
     GPData data = read_sparse_gp_data_from_file(file_path, 12, 2, 260, 40, true);
 
+    // Read for state v
     Eigen::RowVectorXd ard_length_scale_v = Eigen::RowVectorXd(12);
-    ard_length_scale_v << 0.8658335733313588, 13.322692325094174, 6.407021934587417, 14.430933792473933, 
-                        0.8262508642621557, 12.956010458686743, 14.755220096026246, 17.347816965479478, 
-                        2.1033703167736517, 13.100624005598226, 14.435174572545298, 17.816198438786444;
+    ard_length_scale_v << 0.8658335733313588, 13.322692325094174, 6.407021934587417, 14.430933792473933, 0.8262508642621557, 12.956010458686743, 14.755220096026246, 17.347816965479478, 2.1033703167736517, 13.100624005598226, 14.435174572545298, 17.816198438786444;
+    std::shared_ptr<kernel_base> constant_kernel_ptr_v = std::make_shared<constant_kernel>(15.938946986819923);
     std::shared_ptr<kernel_base> rbf_kernel_ptr_v = std::make_shared<rbf_kernel>(ard_length_scale_v);
-    Eigen::MatrixXd test_1 = data.m_feature.block(0, 0, 4, 12), test_2 = data.m_feature.block(4, 0, 1, 12);
-    Eigen::MatrixXd dk_dx = rbf_kernel_ptr_v->dk_dx(test_1, test_2);
+	std::shared_ptr<kernel_base> my_kernel_v = std::make_shared<product_kernel>(constant_kernel_ptr_v, rbf_kernel_ptr_v);
 
-    std::cout << "[GPRTest]: dk_dx is\n" << dk_dx << "\n";
+    VariationalGPR spgp_update(my_kernel_v, normalize_gpr);
+    spgp_update.likelihood_varience = 0.00026610989521133605;
+    if (sparse_method != 0) spgp_update.inference_method = 1;
+
+    Eigen::MatrixXd x_first_half = data.m_feature.block(0, 0, 130, data.m_feature.cols());
+    Eigen::MatrixXd y_first_half = data.m_output.block(0, 0, 130, 1);
+    Eigen::MatrixXd x_second_half = data.m_feature.block(130, 0, 130, data.m_feature.cols());
+    Eigen::MatrixXd y_second_half = data.m_output.block(130, 0, 130, 1);
+    Eigen::MatrixXd x_test = data.m_feature.block(130, 0, 4, data.m_feature.cols());
+    spgp_update.fit(x_first_half, y_first_half, data.m_inducing_points);
+    auto result_before = spgp_update.predict(x_test, true, false);
+    std::cout << "[IncrementalGPR Test] Mean result before:\n" << result_before.y_mean.transpose() << '\n';
+    std::cout << "[IncrementalGPR Test] shape of U:\n" << spgp_update.m_M << '\n';
+
+    for (int i = 0; i < 20; i++)
+    {
+        spgp_update.add_new_inducing_quick(x_second_half.row(i));
+        spgp_update.update_mu_su(x_second_half.row(i), y_second_half.row(i));
+    }
+    auto result_after = spgp_update.predict(x_test, true, false);
+    std::cout << "[IncrementalGPR Test] Mean result after:\n" << result_after.y_mean.transpose() << '\n';
+    std::cout << "[IncrementalGPR Test] shape of U:\n" << spgp_update.m_M << '\n';
+}
+
+void test_add_inducing(int sparse_method, bool normalize_gpr)
+{
+    std::cout << "[VariationalGPR Test] test with sparse_method " << sparse_method << ", and normalize is " << normalize_gpr << '\n';
+    std::string file_path = "C:/Users/pc/Desktop/Personal/Code/GPRcpp/Log/py.txt";
+    GPData data = read_sparse_gp_data_from_file(file_path, 12, 2, 260, 40, true);
+
+    // Read for state v
+    Eigen::RowVectorXd ard_length_scale_v = Eigen::RowVectorXd(12);
+    ard_length_scale_v << 0.8658335733313588, 13.322692325094174, 6.407021934587417, 14.430933792473933, 0.8262508642621557, 12.956010458686743, 14.755220096026246, 17.347816965479478, 2.1033703167736517, 13.100624005598226, 14.435174572545298, 17.816198438786444;
+    std::shared_ptr<kernel_base> constant_kernel_ptr_v = std::make_shared<constant_kernel>(15.938946986819923);
+    std::shared_ptr<kernel_base> rbf_kernel_ptr_v = std::make_shared<rbf_kernel>(ard_length_scale_v);
+	std::shared_ptr<kernel_base> my_kernel_v = std::make_shared<product_kernel>(constant_kernel_ptr_v, rbf_kernel_ptr_v);
+
+    VariationalGPR spgp_add_inducing(my_kernel_v, normalize_gpr);
+    spgp_add_inducing.likelihood_varience = 0.00026610989521133605;
+    if (sparse_method != 0) spgp_add_inducing.inference_method = 1;
+
+    Eigen::MatrixXd u_first_half = data.m_inducing_points.block(0, 0, 20, data.m_inducing_points.cols());
+    Eigen::MatrixXd u_second_half = data.m_inducing_points.block(20, 0, 20, data.m_inducing_points.cols());
+    Eigen::MatrixXd x_test = data.m_feature.block(0, 0, 4, data.m_feature.cols());
+    spgp_add_inducing.fit(data.m_feature, data.m_output.col(0), u_first_half);
+    auto result_before = spgp_add_inducing.predict_cholesky(x_test, true, false);
+    std::cout << "[IncrementalGPR Test] Mean result before:\n" << result_before.y_mean.transpose() << '\n';
+    std::cout << "[IncrementalGPR Test] shape of U:\n" << spgp_add_inducing.m_M << '\n';
+
+    for (int i = 0; i < 20; i++)
+    {
+        spgp_add_inducing.add_new_inducing_data(u_second_half.row(i));
+    }
+    auto result_after = spgp_add_inducing.predict_cholesky(x_test, true, false);
+    std::cout << "[IncrementalGPR Test] Mean result after:\n" << result_after.y_mean.transpose() << '\n';
+    std::cout << "[IncrementalGPR Test] shape of U:\n" << spgp_add_inducing.m_M << '\n';
+}
+
+void test_add_data(int sparse_method, bool normalize_gpr)
+{
+    std::cout << "[VariationalGPR Test] test with sparse_method " << sparse_method << ", and normalize is " << normalize_gpr << '\n';
+    std::string file_path = "C:/Users/pc/Desktop/Personal/Code/GPRcpp/Log/py.txt";
+    GPData data = read_sparse_gp_data_from_file(file_path, 12, 2, 260, 40, true);
+
+    // Read for state v
+    Eigen::RowVectorXd ard_length_scale_v = Eigen::RowVectorXd(12);
+    ard_length_scale_v << 0.8658335733313588, 13.322692325094174, 6.407021934587417, 14.430933792473933, 0.8262508642621557, 12.956010458686743, 14.755220096026246, 17.347816965479478, 2.1033703167736517, 13.100624005598226, 14.435174572545298, 17.816198438786444;
+    std::shared_ptr<kernel_base> constant_kernel_ptr_v = std::make_shared<constant_kernel>(15.938946986819923);
+    std::shared_ptr<kernel_base> rbf_kernel_ptr_v = std::make_shared<rbf_kernel>(ard_length_scale_v);
+	std::shared_ptr<kernel_base> my_kernel_v = std::make_shared<product_kernel>(constant_kernel_ptr_v, rbf_kernel_ptr_v);
+
+    VariationalGPR spgp_add_data(my_kernel_v, normalize_gpr);
+    spgp_add_data.likelihood_varience = 0.00026610989521133605;
+    if (sparse_method != 0) spgp_add_data.inference_method = 1;
+
+    Eigen::MatrixXd x_first_half = data.m_feature.block(0, 0, 130, data.m_feature.cols());
+    Eigen::MatrixXd y_first_half = data.m_output.block(0, 0, 130, 1);
+    Eigen::MatrixXd x_second_half = data.m_feature.block(130, 0, 130, data.m_feature.cols());
+    Eigen::MatrixXd y_second_half = data.m_output.block(130, 0, 130, 1);
+    Eigen::MatrixXd x_test = x_second_half.block(0, 0, 4, x_second_half.cols());
+    spgp_add_data.fit(x_first_half, y_first_half, data.m_inducing_points);
+    auto result_before = spgp_add_data.predict_cholesky(x_test, true, false);
+
+    spgp_add_data.add_new_data(x_second_half, y_second_half);
+    auto result_after = spgp_add_data.predict_cholesky(x_test, true, false);
+    std::cout << "[IncrementalGPR Test] Mean result before:\n" << result_before.y_mean.transpose() << '\n';
+    std::cout << "[IncrementalGPR Test] Mean result after:\n" << result_after.y_mean.transpose() << '\n';
 }
 
 void test_variational_gpr(int sparse_method, bool normalize_gpr)
@@ -135,13 +272,12 @@ void test_variational_gpr(int sparse_method, bool normalize_gpr)
     auto result_w2 = spgp_w.predict(x_test2, true, true);
     std::cout << "[VariationalGPR Test] gradient result_v 2:\n" << result_v2.dmu_dx.transpose() << '\n';
     std::cout << "[VariationalGPR Test] gradient result_w 2:\n" << result_w2.dmu_dx.transpose() << '\n';
-
-    /* -------------------- Add New Data Test -------------------- */
-    auto result_v_before_add_data = spgp_v.predict_cholesky(x_test2, true, true);
-    std::cout << "[VariationalGPR Test] before add new data mu with " << spgp_v.m_N << " data:\n" << result_v2.y_mean << '\n';
-    spgp_v.add_new_data(x_test2, result_v2.y_mean);
-    auto result_v_add_data = spgp_v.predict_cholesky(x_test2, true, true);
-    std::cout << "[VariationalGPR Test] after add new data mu with " << spgp_v.m_N << " data:\n" << result_v_add_data.y_mean << '\n';
+    // std::cout << "[VariationalGPR Test] Luu:\n" << spgp_v.m_Luu.block(0, 0, 4, 4) << '\n';
+    // std::cout << "[VariationalGPR Test] L:\n" << spgp_v.m_L.block(0, 0, 4, 4) << '\n';
+    // std::cout << "[VariationalGPR Test] mu:\n" << spgp_v.m_mu.block(0, 0, 4, 1) << '\n';
+    // std::cout << "[VariationalGPR Test] Su:\n" << spgp_v.m_Su.block(0, 0, 4, 4) << '\n';
+    // std::cout << "[VariationalGPR Test] diag_inv:\n" << spgp_v.m_diag_inv.block(0, 0, 1, 4) << '\n';
+    // std::cout << "[VariationalGPR Test] Kuf:\n" << spgp_v.m_Kuf.block(0, 0, 4, 4) << '\n';
 }
 
 void test_for_py_simulator(int sparse_method, bool normalize_gpr)

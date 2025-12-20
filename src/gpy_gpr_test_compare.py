@@ -5,7 +5,7 @@ import os
 
 class GaussianModel:
     def __init__(self, gaussian_opts:dict):
-        sparse_method = 0
+        sparse_method = 1
         # ----- 1. Read the data and load it to numpy -----
         train_data, inducing_data = self.read_data(gaussian_opts)
 
@@ -102,7 +102,8 @@ def test():
     print("Mean result_w:\n", mean_w.squeeze())
     print("Cov result_w:\n", cov_w)
 
-    dk_dv, dk_dw = model.dk_dx(x_test)
+    x_test_2 = np.array([0.00980392,0.0155402,0.192157, 0.304279, 0.0025, 0.00396425, 0.1, 0.15854, 0, 0, 0, 0]).reshape(1, -1)
+    dk_dv, dk_dw = model.dk_dx(x_test_2)
     dmu_dv = model.sparse_model_v.normalizer.inverse_mean(dk_dv.T @ model.sparse_model_v.posterior.woodbury_vector) - model.sparse_model_v.normalizer.inverse_mean(0.0)
     dmu_dw = model.sparse_model_w.normalizer.inverse_mean(dk_dw.T @ model.sparse_model_w.posterior.woodbury_vector) - model.sparse_model_w.normalizer.inverse_mean(0.0)
     print("dmu_dv:\n", dmu_dv.squeeze())

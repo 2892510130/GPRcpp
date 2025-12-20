@@ -14,8 +14,9 @@
             "request": "launch",
             "program": "${workspaceFolder}/build/AMD64/Debug/bin/gpr_test.exe",
             "args": [
-                "4",
-                "0",
+                "7",
+                "1",
+                "0"
             ],
             "stopAtEntry": false,
             "cwd": "${fileDirname}",

@@ -27,8 +27,11 @@ file(GLOB_RECURSE UTILES_SOURCE_FILE
      "src/utils/*.cpp"
 )
 
-# list(REMOVE_ITEM UTILS_SOURCE_FILE ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp)
+message("Cmake Build Type: ${CMAKE_BUILD_TYPE}")
 
+if(CMAKE_BUILD_TYPE STREQUAL "Release")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -march=native -fopenmp -DNDEBUG")
+endif()
 
 # find_package(OpenMP)
 # if(OpenMP_CXX_FOUND)
@@ -57,16 +60,11 @@ add_library(GPRLibrary
     ${GPRS_SOURCE_FILE} 
 )
 
-message("Eigen3_INCLUDE_DIRS: ${Eigen3_INCLUDE_DIRS}") # It is werid that this one return nothing, while eigen is founded (only in lab pc)
-
-
 target_include_directories(KernelsLibrary PUBLIC include)
 target_include_directories(UtilsLibrary PUBLIC include)
 target_include_directories(GPRLibrary PUBLIC include)
 target_include_directories(MathLibrary PUBLIC include)
 
-# You have to use this in this pc (lab pc), while my own pc can skip this line by using 
-# 
 target_link_libraries(MathLibrary Eigen3::Eigen)
 target_link_libraries(UtilsLibrary Eigen3::Eigen)
 target_link_libraries(KernelsLibrary MathLibrary)

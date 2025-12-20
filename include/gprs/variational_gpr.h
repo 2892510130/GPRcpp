@@ -20,7 +20,9 @@ public:
     void add_new_data(const Eigen::MatrixXd & X_new, const Eigen::MatrixXd & Y_new);
     void remove_data(int remove_number = 1);
     void add_new_inducing_data(const Eigen::MatrixXd & U_new);
+    void add_new_inducing_quick(const Eigen::MatrixXd & U_new); // if we only use mu su to predict
     void update_L();
+    void update_Luu(const Eigen::MatrixXd & Kun, const Eigen::MatrixXd & Knn);
     void add_mu_su(const Eigen::MatrixXd & Kun, const Eigen::MatrixXd & Knn);
     void update_mu_su(const Eigen::MatrixXd & X_new, const Eigen::MatrixXd & Y_new);
 
