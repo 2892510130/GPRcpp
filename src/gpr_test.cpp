@@ -272,12 +272,12 @@ void test_variational_gpr(int sparse_method, bool normalize_gpr)
     auto result_w2 = spgp_w.predict(x_test2, true, true);
     std::cout << "[VariationalGPR Test] gradient result_v 2:\n" << result_v2.dmu_dx.transpose() << '\n';
     std::cout << "[VariationalGPR Test] gradient result_w 2:\n" << result_w2.dmu_dx.transpose() << '\n';
-    // std::cout << "[VariationalGPR Test] Luu:\n" << spgp_v.m_Luu.block(0, 0, 4, 4) << '\n';
-    // std::cout << "[VariationalGPR Test] L:\n" << spgp_v.m_L.block(0, 0, 4, 4) << '\n';
-    // std::cout << "[VariationalGPR Test] mu:\n" << spgp_v.m_mu.block(0, 0, 4, 1) << '\n';
-    // std::cout << "[VariationalGPR Test] Su:\n" << spgp_v.m_Su.block(0, 0, 4, 4) << '\n';
-    // std::cout << "[VariationalGPR Test] diag_inv:\n" << spgp_v.m_diag_inv.block(0, 0, 1, 4) << '\n';
-    // std::cout << "[VariationalGPR Test] Kuf:\n" << spgp_v.m_Kuf.block(0, 0, 4, 4) << '\n';
+    std::cout << "[VariationalGPR Test] Luu:\n" << spgp_v.m_Luu.block(0, 0, 4, 4) << '\n';
+    std::cout << "[VariationalGPR Test] L:\n" << spgp_v.m_L.block(0, 0, 4, 4) << '\n';
+    std::cout << "[VariationalGPR Test] mu:\n" << spgp_v.m_mu.block(0, 0, 4, 1) << '\n';
+    std::cout << "[VariationalGPR Test] Su:\n" << spgp_v.m_Su.block(0, 0, 4, 4) << '\n';
+    std::cout << "[VariationalGPR Test] diag_inv:\n" << spgp_v.m_diag_inv.block(0, 0, 1, 4) << '\n';
+    std::cout << "[VariationalGPR Test] Kuf:\n" << spgp_v.m_Kuf.block(0, 0, 4, 4) << '\n';
 }
 
 void test_for_py_simulator(int sparse_method, bool normalize_gpr)

@@ -58,7 +58,7 @@ namespace GPRcpp
         Kuu = (Kuu + Kuu.transpose()) / 2.0;
         m_Kuf.block(0, 0, m_M, m_N) = kernel_->evaluate(m_inducing_point.block(0, 0, m_M, m_D), m_X_train.block(0, 0, m_N, m_D));
 
-        Eigen::MatrixXd jitter = alpha_ * Eigen::MatrixXd::Identity(m_M, m_M);
+        Eigen::MatrixXd jitter = 1e-6 * Eigen::MatrixXd::Identity(m_M, m_M); // We hard code jitter to be 1e-6 here
         m_Luu.block(0, 0, m_M, m_M) = (Kuu + jitter).llt().matrixL();
         Eigen::MatrixXd Luu = m_Luu.block(0, 0, m_M, m_M);
 
