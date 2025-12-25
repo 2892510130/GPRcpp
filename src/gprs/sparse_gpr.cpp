@@ -193,7 +193,6 @@ gpr_results SparseGPR::predict(const Eigen::MatrixXd & X_test, bool return_cov, 
     }
 }
 
-
 SparseGPR::~SparseGPR()
 {
 

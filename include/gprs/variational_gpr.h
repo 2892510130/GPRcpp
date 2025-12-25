@@ -25,6 +25,7 @@ public:
     void update_Luu(const Eigen::MatrixXd & Kun, const Eigen::MatrixXd & Knn);
     void add_mu_su(const Eigen::MatrixXd & Kun, const Eigen::MatrixXd & Knn);
     void update_mu_su(const Eigen::MatrixXd & X_new, const Eigen::MatrixXd & Y_new);
+    Eigen::MatrixXd row_cosin_similarity(const Eigen::MatrixXd& A, const Eigen::MatrixXd& B);
 
 public:
     Eigen::MatrixXd m_inducing_point;

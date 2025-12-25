@@ -278,6 +278,11 @@ void test_variational_gpr(int sparse_method, bool normalize_gpr)
     std::cout << "[VariationalGPR Test] Su:\n" << spgp_v.m_Su.block(0, 0, 4, 4) << '\n';
     std::cout << "[VariationalGPR Test] diag_inv:\n" << spgp_v.m_diag_inv.block(0, 0, 1, 4) << '\n';
     std::cout << "[VariationalGPR Test] Kuf:\n" << spgp_v.m_Kuf.block(0, 0, 4, 4) << '\n';
+
+    Eigen::RowVectorXd similarites = spgp_v.row_cosin_similarity(x_test2, spgp_v.m_inducing_point.block(0, 0, spgp_v.m_M, spgp_v.m_D));
+    double max_sim = similarites.maxCoeff();
+    std::cout << "[VariationalGPR Test] sim:\n" << similarites << '\n';
+    std::cout << "[VariationalGPR Test] max_sim:\n" << max_sim << '\n';
 }
 
 void test_for_py_simulator(int sparse_method, bool normalize_gpr)

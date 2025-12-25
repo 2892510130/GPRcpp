@@ -349,4 +349,13 @@ namespace GPRcpp
         m_mu.block(0, 0, m_M, 1) = m_mu.block(0, 0, m_M, 1) + L_k * r_k(0, 0);
         m_Su.block(0, 0, m_M, m_M) = m_Su.block(0, 0, m_M, m_M) - L_k * V;
     }
+
+    Eigen::MatrixXd VariationalGPR::row_cosin_similarity(const Eigen::MatrixXd& A, const Eigen::MatrixXd& B) {
+        // Normalize rows
+        Eigen::MatrixXd A_norm = A.rowwise().normalized();
+        Eigen::MatrixXd B_norm = B.rowwise().normalized();
+        
+        // Compute similarity matrix
+        return A_norm * B_norm.transpose();
+    }
 }
