@@ -191,8 +191,19 @@ namespace GPRcpp
     void VariationalGPR::add_new_data(const Eigen::MatrixXd & X_new, const Eigen::MatrixXd & Y_new)
     {
         size_t new_N = X_new.rows();
+
+        Eigen::MatrixXd y_new;
+        if (normalize_y_)
+        {
+            y_new = (Y_new.rowwise() - y_train_mean_).array().rowwise() / y_train_std_.array();
+        }
+        else
+        {
+            y_new = Y_new;
+        }
+
         m_X_train.block(m_N, 0, new_N, m_D) = X_new;
-        m_y_train.block(m_N, 0, new_N, 1) = Y_new;
+        m_y_train.block(m_N, 0, new_N, 1) = y_new;
 
         Eigen::MatrixXd Kuf_new = kernel_->evaluate(m_inducing_point.block(0, 0, m_M, m_D), X_new);
         Eigen::MatrixXd W_new = m_Luu.block(0, 0, m_M, m_M).triangularView<Eigen::Lower>().solve(Kuf_new);
@@ -208,11 +219,11 @@ namespace GPRcpp
             Eigen::MatrixXd diag_inv_new = 1.0 / diag_new.array();
             m_diag.block(0, m_N, 1, new_N) = diag_new;
             m_diag_inv.block(0, m_N, 1, new_N) = diag_inv_new;
-            W_diag_inv_y_new = (W_new.array() * diag_inv_new.array().replicate(m_M, 1)).matrix() * Y_new;
+            W_diag_inv_y_new = (W_new.array() * diag_inv_new.array().replicate(m_M, 1)).matrix() * y_new;
         }
         else
         {
-            W_diag_inv_y_new = (W_new / likelihood_varience) * Y_new;
+            W_diag_inv_y_new = (W_new / likelihood_varience) * y_new;
         }
 
         m_W_diag_inv_y += W_diag_inv_y_new;
@@ -323,11 +334,21 @@ namespace GPRcpp
 
     void VariationalGPR::update_mu_su(const Eigen::MatrixXd & X_new, const Eigen::MatrixXd & Y_new)
     {
+        Eigen::MatrixXd y_new;
+        if (normalize_y_)
+        {
+            y_new = (Y_new.rowwise() - y_train_mean_).array().rowwise() / y_train_std_.array();
+        }
+        else
+        {
+            y_new = Y_new;
+        }
+
         Eigen::MatrixXd Knu = kernel_->evaluate(X_new, m_inducing_point.block(0, 0, m_M, m_D));;
         Eigen::MatrixXd Ws = m_Luu.block(0, 0, m_M, m_M).triangularView<Eigen::Lower>().solve(Knu.transpose());
         
         Eigen::MatrixXd Phi_k = m_Luu.block(0, 0, m_M, m_M).transpose().triangularView<Eigen::Upper>().solve(Ws);
-        Eigen::MatrixXd r_k = Y_new - Phi_k.transpose() * m_mu.block(0, 0, m_M, 1);
+        Eigen::MatrixXd r_k = y_new - Phi_k.transpose() * m_mu.block(0, 0, m_M, 1);
 
         Eigen::MatrixXd V = Phi_k.transpose() * m_Su.block(0, 0, m_M, m_M);
         Eigen::MatrixXd G_k;
