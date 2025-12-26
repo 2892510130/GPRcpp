@@ -86,4 +86,7 @@ ExactGPR::~ExactGPR()
 
 }
 
+void ExactGPR::save_data(const std::string& filename) {}
+void ExactGPR::load_data(const std::string& filename) {}
+
 }

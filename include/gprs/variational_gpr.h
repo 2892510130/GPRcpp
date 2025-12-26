@@ -27,6 +27,13 @@ public:
     void update_mu_su(const Eigen::MatrixXd & X_new, const Eigen::MatrixXd & Y_new);
     Eigen::MatrixXd row_cosin_similarity(const Eigen::MatrixXd& A, const Eigen::MatrixXd& B);
 
+    void save_data(const std::string& filename) override;
+    void load_data(const std::string& filename) override;
+
+    void save_matrix_to_file(std::ofstream &file, const Eigen::MatrixXd & matrix);
+    void load_matrix_from_file(std::ifstream &file, Eigen::MatrixXd & matrix);
+    void load_vector_from_file(std::ifstream &file, Eigen::RowVectorXd & vector);
+
 public:
     Eigen::MatrixXd m_inducing_point;
 

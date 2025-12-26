@@ -2,6 +2,7 @@
 #include "kernels/sum_kernel.h"
 #include "kernels/product_kernel.h"
 #include "gpr_math/distance.h"
+#include <fstream>
 
 namespace GPRcpp
 {
@@ -33,6 +34,10 @@ public:
     virtual gpr_results predict(const Eigen::MatrixXd & X_test) = 0;
 
     virtual gpr_results predict(const Eigen::MatrixXd & X_test, bool return_cov, bool compute_jac = false) = 0;
+
+    virtual void save_data(const std::string& filename) = 0;
+
+    virtual void load_data(const std::string& filename) = 0;
 
 public:
     std::shared_ptr<kernel_base> kernel_;

@@ -278,11 +278,20 @@ void test_variational_gpr(int sparse_method, bool normalize_gpr)
     std::cout << "[VariationalGPR Test] Su:\n" << spgp_v.m_Su.block(0, 0, 4, 4) << '\n';
     std::cout << "[VariationalGPR Test] diag_inv:\n" << spgp_v.m_diag_inv.block(0, 0, 1, 4) << '\n';
     std::cout << "[VariationalGPR Test] Kuf:\n" << spgp_v.m_Kuf.block(0, 0, 4, 4) << '\n';
+    std::cout << "[VariationalGPR Test] mean size:\n" << spgp_v.y_train_mean_.rows() << ", " << spgp_v.y_train_mean_.cols() << '\n';
 
     Eigen::RowVectorXd similarites = spgp_v.row_cosin_similarity(x_test2, spgp_v.m_inducing_point.block(0, 0, spgp_v.m_M, spgp_v.m_D));
     double max_sim = similarites.maxCoeff();
     std::cout << "[VariationalGPR Test] sim:\n" << similarites << '\n';
     std::cout << "[VariationalGPR Test] max_sim:\n" << max_sim << '\n';
+
+    std::string save_path = "C:/Users/pc/Desktop/Personal/Code/GPRcpp/Log/save_data.txt";
+    spgp_v.save_data(save_path);
+
+    VariationalGPR spgp_read(my_kernel_v, normalize_gpr);
+    spgp_read.load_data(save_path);
+    auto result_read = spgp_read.predict(x_test2, true, true);
+    std::cout << "[VariationalGPR Test] gradient result_v read:\n" << result_read.dmu_dx.transpose() << '\n';
 }
 
 void test_for_py_simulator(int sparse_method, bool normalize_gpr)
@@ -321,18 +330,25 @@ void test_for_py_simulator(int sparse_method, bool normalize_gpr)
     std::cout << "----------------------------\n";
     auto result_v = spgp_v.predict(x_test, true, false);
     auto result_w = spgp_w.predict(x_test, true, false);
-    std::cout << "Mean result_v:\n" << result_v.y_mean << '\n';
-    std::cout << "Cov result_v:\n" << result_v.y_cov << '\n';
-    std::cout << "Mean result_w:\n" << result_w.y_mean << '\n';
-    std::cout << "Cov result_w:\n" << result_w.y_cov << '\n';
+    std::cout << "[PySimulator Test] Mean result_v:\n" << result_v.y_mean << '\n';
+    std::cout << "[PySimulator Test] Cov result_v:\n" << result_v.y_cov << '\n';
+    std::cout << "[PySimulator Test] Mean result_w:\n" << result_w.y_mean << '\n';
+    std::cout << "[PySimulator Test] Cov result_w:\n" << result_w.y_cov << '\n';
     // std::cout << "dmu_dv:\n" << result_v.dmu_dx.transpose() << '\n';
     // std::cout << "dmu_dw:\n" << result_w.dmu_dx.transpose() << '\n';
     Eigen::MatrixXd x_test2 = Eigen::MatrixXd::Zero(1, 12);
     x_test2 << 0.00980392,0.0155402,0.192157,   0.304279,     0.0025, 0.00396425,        0.1,    0.15854,          0,          0,          0,          0;
     auto result_v2 = spgp_v.predict(x_test2, true, true);
     auto result_w2 = spgp_w.predict(x_test2, true, true);
-    std::cout << "gradient result_v 2:\n" << result_v2.dmu_dx.transpose() << '\n';
-    std::cout << "gradient result_w 2:\n" << result_w2.dmu_dx.transpose() << '\n';
+    std::cout << "[PySimulator Test] gradient result_v 2:\n" << result_v2.dmu_dx.transpose() << '\n';
+    std::cout << "[PySimulator Test] gradient result_w 2:\n" << result_w2.dmu_dx.transpose() << '\n';
+
+    std::string save_path = "C:/Users/pc/Desktop/Personal/Code/GPRcpp/Log/save_data.txt";
+    spgp_v.save_data(save_path);
+    SparseGPR spgp_read(my_kernel_v, normalize_gpr);
+    spgp_read.load_data(save_path);
+    auto result_read = spgp_read.predict(x_test2, true, true);
+    std::cout << "[PySimulator Test] gradient result_v read:\n" << result_read.dmu_dx.transpose() << '\n';
 }
 
 /*

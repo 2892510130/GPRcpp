@@ -193,6 +193,69 @@ gpr_results SparseGPR::predict(const Eigen::MatrixXd & X_test, bool return_cov, 
     }
 }
 
+void SparseGPR::save_data(const std::string& filename) 
+{
+    std::ofstream file(filename, std::ios::binary);
+
+    save_matrix_to_file(file, y_train_mean_);
+    save_matrix_to_file(file, y_train_std_);
+
+    save_matrix_to_file(file, m_inducing_point);
+    save_matrix_to_file(file, m_X_train);
+    save_matrix_to_file(file, m_y_train);
+    save_matrix_to_file(file, woodbury_inv);
+    save_matrix_to_file(file, Alpha_);
+
+    file.write(reinterpret_cast<const char*>(&sparse_method), sizeof(sparse_method));
+    file.write(reinterpret_cast<const char*>(&likelihood_varience), sizeof(likelihood_varience));
+}
+
+void SparseGPR::load_data(const std::string& filename) 
+{
+    std::ifstream file(filename, std::ios::binary);
+
+    load_vector_from_file(file, y_train_mean_);
+    load_vector_from_file(file, y_train_std_);
+
+    load_matrix_from_file(file, m_inducing_point);
+    load_matrix_from_file(file, m_X_train);
+    load_matrix_from_file(file, m_y_train);
+    load_matrix_from_file(file, woodbury_inv);
+    load_matrix_from_file(file, Alpha_);
+
+    file.read(reinterpret_cast<char*>(&sparse_method), sizeof(sparse_method));
+    file.read(reinterpret_cast<char*>(&likelihood_varience), sizeof(likelihood_varience));
+}
+
+void SparseGPR::save_matrix_to_file(std::ofstream &file, const Eigen::MatrixXd & matrix)
+{
+    Eigen::MatrixXd::Index rows, cols;
+    rows = matrix.rows(); cols = matrix.cols();
+    file.write(reinterpret_cast<const char*>(&rows), sizeof(rows));
+    file.write(reinterpret_cast<const char*>(&cols), sizeof(cols));
+    file.write(reinterpret_cast<const char*>(matrix.data()), rows*cols*sizeof(double));
+}
+
+void SparseGPR::load_matrix_from_file(std::ifstream &file, Eigen::MatrixXd & matrix)
+{
+    Eigen::MatrixXd::Index rows, cols;
+    rows = matrix.rows(); cols = matrix.cols();
+    file.read(reinterpret_cast<char*>(&rows), sizeof(rows));
+    file.read(reinterpret_cast<char*>(&cols), sizeof(cols));
+    matrix.resize(rows, cols);
+    file.read(reinterpret_cast<char*>(matrix.data()), rows*cols*sizeof(double));
+}
+
+void SparseGPR::load_vector_from_file(std::ifstream &file, Eigen::RowVectorXd & vector)
+{
+    Eigen::MatrixXd::Index rows, cols;
+    rows = vector.rows(); cols = vector.cols();
+    file.read(reinterpret_cast<char*>(&rows), sizeof(rows));
+    file.read(reinterpret_cast<char*>(&cols), sizeof(cols));
+    vector.resize(rows, cols);
+    file.read(reinterpret_cast<char*>(vector.data()), rows*cols*sizeof(double));
+}
+
 SparseGPR::~SparseGPR()
 {
 

@@ -358,4 +358,89 @@ namespace GPRcpp
         // Compute similarity matrix
         return A_norm * B_norm.transpose();
     }
+
+    void VariationalGPR::save_matrix_to_file(std::ofstream &file, const Eigen::MatrixXd & matrix)
+    {
+        Eigen::MatrixXd::Index rows, cols;
+        rows = matrix.rows(); cols = matrix.cols();
+        file.write(reinterpret_cast<const char*>(&rows), sizeof(rows));
+        file.write(reinterpret_cast<const char*>(&cols), sizeof(cols));
+        file.write(reinterpret_cast<const char*>(matrix.data()), rows*cols*sizeof(double));
+    }
+
+    void VariationalGPR::load_matrix_from_file(std::ifstream &file, Eigen::MatrixXd & matrix)
+    {
+        Eigen::MatrixXd::Index rows, cols;
+        rows = matrix.rows(); cols = matrix.cols();
+        file.read(reinterpret_cast<char*>(&rows), sizeof(rows));
+        file.read(reinterpret_cast<char*>(&cols), sizeof(cols));
+        matrix.resize(rows, cols);
+        file.read(reinterpret_cast<char*>(matrix.data()), rows*cols*sizeof(double));
+    }
+
+    void VariationalGPR::load_vector_from_file(std::ifstream &file, Eigen::RowVectorXd & vector)
+    {
+        Eigen::MatrixXd::Index rows, cols;
+        rows = vector.rows(); cols = vector.cols();
+        file.read(reinterpret_cast<char*>(&rows), sizeof(rows));
+        file.read(reinterpret_cast<char*>(&cols), sizeof(cols));
+        vector.resize(rows, cols);
+        file.read(reinterpret_cast<char*>(vector.data()), rows*cols*sizeof(double));
+    }
+
+    void VariationalGPR::save_data(const std::string& filename)
+    {
+        std::ofstream file(filename, std::ios::binary);
+
+        // Save dimensions
+        file.write(reinterpret_cast<const char*>(&m_N), sizeof(m_N));
+        file.write(reinterpret_cast<const char*>(&m_M), sizeof(m_M));
+        file.write(reinterpret_cast<const char*>(&m_D), sizeof(m_D));
+        file.write(reinterpret_cast<const char*>(&sparse_method), sizeof(sparse_method));
+        file.write(reinterpret_cast<const char*>(&likelihood_varience), sizeof(likelihood_varience));
+    
+        save_matrix_to_file(file, y_train_mean_);
+        save_matrix_to_file(file, y_train_std_);
+
+        save_matrix_to_file(file, m_inducing_point);
+        save_matrix_to_file(file, m_X_train);
+        save_matrix_to_file(file, m_y_train);
+        save_matrix_to_file(file, m_Luu);
+        save_matrix_to_file(file, m_mu);
+        save_matrix_to_file(file, m_Su);
+        save_matrix_to_file(file, m_Kuf);
+        save_matrix_to_file(file, m_W);
+        save_matrix_to_file(file, m_diag);
+        save_matrix_to_file(file, m_diag_inv);
+        save_matrix_to_file(file, m_W_diag_inv_y);
+        save_matrix_to_file(file, m_L);
+    }
+
+    void VariationalGPR::load_data(const std::string& filename)
+    {
+        std::ifstream file(filename, std::ios::binary);
+
+        // Load dimensions
+        file.read(reinterpret_cast<char*>(&m_N), sizeof(m_N));
+        file.read(reinterpret_cast<char*>(&m_M), sizeof(m_M));
+        file.read(reinterpret_cast<char*>(&m_D), sizeof(m_D));
+        file.read(reinterpret_cast<char*>(&sparse_method), sizeof(sparse_method));
+        file.read(reinterpret_cast<char*>(&likelihood_varience), sizeof(likelihood_varience));
+
+        load_vector_from_file(file, y_train_mean_);
+        load_vector_from_file(file, y_train_std_);
+
+        load_matrix_from_file(file, m_inducing_point);
+        load_matrix_from_file(file, m_X_train);
+        load_matrix_from_file(file, m_y_train);
+        load_matrix_from_file(file, m_Luu);
+        load_matrix_from_file(file, m_mu);
+        load_matrix_from_file(file, m_Su);
+        load_matrix_from_file(file, m_Kuf);
+        load_matrix_from_file(file, m_W);
+        load_matrix_from_file(file, m_diag);
+        load_matrix_from_file(file, m_diag_inv);
+        load_matrix_from_file(file, m_W_diag_inv_y);
+        load_matrix_from_file(file, m_L);
+    }
 }

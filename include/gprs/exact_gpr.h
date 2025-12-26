@@ -13,6 +13,8 @@ public:
     void fit(const Eigen::MatrixXd & X_train, const Eigen::MatrixXd & y_train, const Eigen::MatrixXd & inducing_points) override;
     gpr_results predict(const Eigen::MatrixXd & X_test) override;
     gpr_results predict(const Eigen::MatrixXd & X_test, bool return_cov, bool compute_jac = false) override;
+    void save_data(const std::string& filename) override;
+    void load_data(const std::string& filename) override;
 
 public:
     Eigen::MatrixXd m_inducing_point;

@@ -23,6 +23,12 @@ public:
     gpr_results predict(const Eigen::MatrixXd & X_test) override;
     gpr_results predict(const Eigen::MatrixXd & X_test, bool return_cov, bool compute_jac = false) override;
 
+    void save_data(const std::string& filename) override;
+    void load_data(const std::string& filename) override;
+    void save_matrix_to_file(std::ofstream &file, const Eigen::MatrixXd & matrix);
+    void load_matrix_from_file(std::ifstream &file, Eigen::MatrixXd & matrix);
+    void load_vector_from_file(std::ifstream &file, Eigen::RowVectorXd & vector);
+
 public:
     Eigen::MatrixXd m_inducing_point;
     Eigen::MatrixXd woodbury_inv;
