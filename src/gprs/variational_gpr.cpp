@@ -192,6 +192,11 @@ namespace GPRcpp
     {
         size_t new_N = X_new.rows();
 
+        if (new_N + m_N > m_X_train.rows())
+        {
+            return;
+        }
+
         Eigen::MatrixXd y_new;
         if (normalize_y_)
         {
@@ -249,6 +254,10 @@ namespace GPRcpp
     void VariationalGPR::add_new_inducing_data(const Eigen::MatrixXd & U_new)
     {
         size_t new_M = U_new.rows();
+        if (new_M + m_M > m_inducing_point.rows())
+        {
+            return;
+        }
         if (new_M > 1) std::runtime_error("Currently only support adding one inducing point at a time.");
 
         m_inducing_point.block(m_M, 0, new_M, m_D) = U_new;
@@ -292,6 +301,10 @@ namespace GPRcpp
     void VariationalGPR::add_new_inducing_quick(const Eigen::MatrixXd & U_new)
     {
         size_t new_M = U_new.rows();
+        if (new_M + m_M > m_inducing_point.rows())
+        {
+            return;
+        }
         if (new_M > 1) std::runtime_error("Currently only support adding one inducing point at a time.");
 
         m_inducing_point.block(m_M, 0, new_M, m_D) = U_new;

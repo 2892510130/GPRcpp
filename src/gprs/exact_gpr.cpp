@@ -8,7 +8,7 @@ namespace GPRcpp
 void ExactGPR::fit(const Eigen::MatrixXd & X_train, const Eigen::MatrixXd & y_train, const Eigen::MatrixXd & inducing_points)
 {
     std::cout << "<!!!! It is exact GPR, please use fit function without inducing points !!!!>" << '\n';
-    throw std::runtime_error("Not implemented");
+    fit(X_train, y_train);
 }
 
 void ExactGPR::fit(const Eigen::MatrixXd & X_train, const Eigen::MatrixXd & y_train)
