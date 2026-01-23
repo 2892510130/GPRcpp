@@ -44,8 +44,6 @@ namespace GPRcpp
         else dist = dist_calc.compute(x1 / params_[0]);
 
         dist = exp(-0.5 * dist.array());
-        // Eigen::MatrixXd k = squareform(dist, x1.rows());
-        // return k + Eigen::MatrixXd::Identity(x1.rows(), x1.rows());
         return dist;
     }
 
@@ -58,29 +56,6 @@ namespace GPRcpp
 
         dist = exp(-0.5 * dist.array());
         return dist;
-    }
-
-    Eigen::MatrixXd rbf_kernel::squareform(const Eigen::MatrixXd & x, size_t size_) const
-    {
-        Eigen::MatrixXd k = Eigen::MatrixXd::Zero(size_, size_);
-
-        int i = 1;
-        int j = 0;
-        int count = 0;
-        while (count < x.rows())
-        {
-            if (i == size_)
-            {
-                j++;
-                i = j + 1;
-            }
-
-            k(i, j) = x(count, 0);
-            k(j, i) = x(count, 0);
-            i++;
-            count++;
-        }
-        return k;
     }
 
     Eigen::MatrixXd rbf_kernel::dk_dx(const Eigen::MatrixXd & x1, const Eigen::MatrixXd & x2) const
