@@ -39,15 +39,13 @@ namespace GPRcpp
     Eigen::MatrixXd rbf_kernel::evaluate(const Eigen::MatrixXd & x1) const
     {
         auto dist_calc = distance_calculator(distance_type::euclidean);
-        // std::cout << "x1:\n" << x1 << '\n';
-        // std::cout << "params_:\n" << params_[0] << '\n';
         Eigen::MatrixXd dist;
         if (m_ard) dist = dist_calc.compute(x1.array() / m_length_scale.replicate(x1.rows(), 1).array());
         else dist = dist_calc.compute(x1 / params_[0]);
 
         dist = exp(-0.5 * dist.array());
-        Eigen::MatrixXd k = squareform(dist, x1.rows());
-        return k + Eigen::MatrixXd::Identity(x1.rows(), x1.rows());
+        // Eigen::MatrixXd k = squareform(dist, x1.rows());
+        // return k + Eigen::MatrixXd::Identity(x1.rows(), x1.rows());
         return dist;
     }
 

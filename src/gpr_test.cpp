@@ -6,6 +6,7 @@
 #include "gprs/variational_gpr.h"
 #include "gprs/exact_gpr.h"
 #include "utils/file_operation.h"
+#include "gpr_math/distance.h"
 #include <chrono>
 #include <cmath>
 
@@ -119,10 +120,27 @@ void random_test()
 
     // std::cout << "[GPRTest]: dk_dx is\n" << dk_dx << "\n";
 
-    Eigen::MatrixXd A = Eigen::MatrixXd::Random(4, 4);
-    Eigen::MatrixXd B = A.transpose() * A;
+    std::string file_path = "C:/Users/pc/Desktop/Personal/Code/GPRcpp/Log/py.txt";
+    GPData data = read_sparse_gp_data_from_file(file_path, 12, 2, 260, 40, true);
+
+    Eigen::MatrixXd A = data.m_feature.block(0, 0, 4, 12);
+    Eigen::MatrixXd B = data.m_feature.block(100, 0, 6, 12);
+
+    Eigen::RowVectorXd ard_length_scale_v = Eigen::RowVectorXd(12);
+    ard_length_scale_v << 0.8658335733313588, 13.322692325094174, 6.407021934587417, 14.430933792473933, 0.8262508642621557, 12.956010458686743, 14.755220096026246, 17.347816965479478, 2.1033703167736517, 13.100624005598226, 14.435174572545298, 17.816198438786444;
+    std::unique_ptr<kernel_base> rbf_kernel_ptr_v = std::make_unique<rbf_kernel>(ard_length_scale_v);
+
+    auto dist_calc = distance_calculator(distance_type::euclidean);
+    auto dist = dist_calc.compute(A);
+    auto dist_2 = dist_calc.compute_2d(A, B);
+    auto Kaa = rbf_kernel_ptr_v->evaluate(A);
+    auto Kab = rbf_kernel_ptr_v->evaluate(A, B);
     std::cout << "[GPRTest]: A is\n" << A << "\n";
     std::cout << "[GPRTest]: B is\n" << B << "\n";
+    std::cout << "[GPRTest]: dist is\n" << dist << "\n";
+    std::cout << "[GPRTest]: dist_2 is\n" << dist_2 << "\n";
+    std::cout << "[GPRTest]: Kaa is\n" << Kaa << "\n";
+    std::cout << "[GPRTest]: Kab is\n" << Kab << "\n";
 }
 
 void test_update(int sparse_method, bool normalize_gpr)
