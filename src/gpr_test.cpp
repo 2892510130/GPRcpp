@@ -22,7 +22,8 @@ void test_variational_gpr(int sparse_method = 0, bool normalize_gpr = true);
 void test_add_data(int sparse_method = 0, bool normalize_gpr = true);
 void test_add_inducing(int sparse_method = 0, bool normalize_gpr = true);
 void test_update(int sparse_method = 0, bool normalize_gpr = true);
-void random_test();
+void show_gradient_examples(int test_);
+void random_test(int test_);
 
 int main(int argc, char *argv[])
 {
@@ -96,51 +97,60 @@ int main(int argc, char *argv[])
         if (argc > 3 && atoi(argv[3]) == 0) normalize_gpr = false;
         test_update(sparse_method, normalize_gpr);
     }
+    else if (atoi(argv[1]) == 9)
+    {
+        std::cout << "You have select random test!" << '\n';
+        show_gradient_examples(atoi(argv[2]));
+    }
     else if (atoi(argv[1]) == 100)
     {
         std::cout << "You have select random test!" << '\n';
-        random_test();
+        random_test(atoi(argv[2]));
     }
 
     return 0;
 }
 
-void random_test()
+void random_test(int test_)
 {
-    // std::string file_path = "C:/Users/pc/Desktop/Personal/Code/GPRcpp/Log/py.txt";
-    // GPData data = read_sparse_gp_data_from_file(file_path, 12, 2, 260, 40, true);
+    std::srand(static_cast<unsigned int>(std::time(nullptr)));
+    Eigen::MatrixXd W = Eigen::MatrixXd::Random(6, 1);
+    std::cout << "[MPC Test] mu:\n" << W << '\n';
+}
 
-    // Eigen::RowVectorXd ard_length_scale_v = Eigen::RowVectorXd(12);
-    // ard_length_scale_v << 0.8658335733313588, 13.322692325094174, 6.407021934587417, 14.430933792473933, 
-    //                     0.8262508642621557, 12.956010458686743, 14.755220096026246, 17.347816965479478, 
-    //                     2.1033703167736517, 13.100624005598226, 14.435174572545298, 17.816198438786444;
-    // std::shared_ptr<kernel_base> rbf_kernel_ptr_v = std::make_shared<rbf_kernel>(ard_length_scale_v);
-    // Eigen::MatrixXd test_1 = data.m_feature.block(0, 0, 4, 12), test_2 = data.m_feature.block(4, 0, 1, 12);
-    // Eigen::MatrixXd dk_dx = rbf_kernel_ptr_v->dk_dx(test_1, test_2);
-
-    // std::cout << "[GPRTest]: dk_dx is\n" << dk_dx << "\n";
-
+void show_gradient_examples(int test_)
+{
+    std::srand(static_cast<unsigned int>(std::time(nullptr)));
     std::string file_path = "C:/Users/pc/Desktop/Personal/Code/GPRcpp/Log/py.txt";
     GPData data = read_sparse_gp_data_from_file(file_path, 12, 2, 260, 40, true);
 
-    Eigen::MatrixXd A = data.m_feature.block(0, 0, 4, 12);
     Eigen::MatrixXd B = data.m_feature.block(100, 0, 6, 12);
+    Eigen::MatrixXd C = data.m_feature.block(10, 0, 1, 12);
+    Eigen::MatrixXd C0 = C - Eigen::MatrixXd::Random(1, 12) / test_;
+    Eigen::MatrixXd W = Eigen::MatrixXd::Random(6, 1);
+    Eigen::MatrixXd M = Eigen::MatrixXd::Random(6, 6);
 
     Eigen::RowVectorXd ard_length_scale_v = Eigen::RowVectorXd(12);
     ard_length_scale_v << 0.8658335733313588, 13.322692325094174, 6.407021934587417, 14.430933792473933, 0.8262508642621557, 12.956010458686743, 14.755220096026246, 17.347816965479478, 2.1033703167736517, 13.100624005598226, 14.435174572545298, 17.816198438786444;
     std::unique_ptr<kernel_base> rbf_kernel_ptr_v = std::make_unique<rbf_kernel>(ard_length_scale_v);
 
-    auto dist_calc = distance_calculator(distance_type::euclidean);
-    auto dist = dist_calc.compute(A);
-    auto dist_2 = dist_calc.compute_2d(A, B);
-    auto Kaa = rbf_kernel_ptr_v->evaluate(A);
-    auto Kab = rbf_kernel_ptr_v->evaluate(A, B);
-    std::cout << "[GPRTest]: A is\n" << A << "\n";
-    std::cout << "[GPRTest]: B is\n" << B << "\n";
-    std::cout << "[GPRTest]: dist is\n" << dist << "\n";
-    std::cout << "[GPRTest]: dist_2 is\n" << dist_2 << "\n";
-    std::cout << "[GPRTest]: Kaa is\n" << Kaa << "\n";
-    std::cout << "[GPRTest]: Kab is\n" << Kab << "\n";
+    auto Kbc = rbf_kernel_ptr_v->evaluate(B, C);
+    auto Kbc0 = rbf_kernel_ptr_v->evaluate(B, C0);
+    auto dKbc_dx = rbf_kernel_ptr_v->dk_dx(B, C0); // of shape (M, D)
+    Eigen::MatrixXd mu = Kbc.transpose() * W;
+    Eigen::MatrixXd mu_taylor = Kbc0.transpose() * W + (C - C0) * dKbc_dx.transpose() * W;
+
+    std::cout << "[MPC Test] mu:\n" << mu << '\n';
+    std::cout << "[MPC Test] mu_taylor:\n" << mu_taylor << '\n';
+
+    Eigen::MatrixXd Qzz = Kbc.transpose() * M * Kbc;
+    Eigen::MatrixXd Qzz0 = Kbc0.transpose() * M * Kbc0;
+    Eigen::MatrixXd dQ_dz = dKbc_dx.transpose() * M * Kbc * 2; // + (Kbc.transpose() * M * dKbc_dx).transpose()
+    Eigen::MatrixXd Qzz_taylor = Qzz0 + (C - C0) * dQ_dz;
+
+    std::cout << "[MPC Test] dQ_dz:\n" << dQ_dz << '\n';
+    std::cout << "[MPC Test] Qzz:\n" << Qzz << '\n';
+    std::cout << "[MPC Test] Qzz_taylor:\n" << Qzz_taylor << '\n';
 }
 
 void test_update(int sparse_method, bool normalize_gpr)

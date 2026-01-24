@@ -60,6 +60,8 @@ namespace GPRcpp
 
     Eigen::MatrixXd rbf_kernel::dk_dx(const Eigen::MatrixXd & x1, const Eigen::MatrixXd & x2) const
     {
+        // x1 is of shape (M, D), x2 is typically of shape (1, D), and this is dK(x1, x2) / dx2
+        // if x1 is U, and x2 is z then this function will return dKuz/dz
         Eigen::MatrixXd dk_dl_left;
         if (m_ard) dk_dl_left = (x1 - x2.replicate(x1.rows(), 1)).array() / m_length_scale.replicate(x1.rows(), 1).array().square();
         else dk_dl_left = (x1 - x2.replicate(x1.rows(), 1)) / params_[0];
