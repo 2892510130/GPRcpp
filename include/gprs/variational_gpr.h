@@ -1,5 +1,6 @@
 #pragma once
 #include "gprs/gpr.h"
+#include <utility>
 
 namespace GPRcpp
 {
@@ -21,6 +22,15 @@ public:
     void remove_data(int remove_number = 1);
     void add_new_inducing_data(const Eigen::MatrixXd & U_new);
     void add_new_inducing_quick(const Eigen::MatrixXd & U_new); // if we only use mu su to predict
+    /** \brief Residual variance of a candidate inducing point.
+     *
+     *  Same criterion as the Python reference implementation: project k(U, x) onto the
+     *  current inducing subspace through L_uu and return (var, aa) with
+     *      aa  = k(x, x) + jitter
+     *      var = aa - || L_uu^{-1} k(U, x) ||^2
+     *  A point is worth adding when var > 0.01 * aa.
+     */
+    std::pair<double, double> check_new_inducing_var(const Eigen::MatrixXd & U_new);
     void update_L();
     void update_Luu(const Eigen::MatrixXd & Kun, const Eigen::MatrixXd & Knn);
     void add_mu_su(const Eigen::MatrixXd & Kun, const Eigen::MatrixXd & Knn);

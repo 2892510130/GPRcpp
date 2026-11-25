@@ -19,10 +19,11 @@ namespace GPRcpp
 
         m_X_train = Eigen::MatrixXd::Zero(2 * m_N, m_D);
         m_y_train = Eigen::MatrixXd::Zero(2 * m_N, 1);
-        m_inducing_point = Eigen::MatrixXd::Zero(2 * m_M, m_D);
-        m_Kuf = Eigen::MatrixXd::Zero(2 * m_M, 2 * m_N);
-        m_W = Eigen::MatrixXd::Zero(2 * m_M, 2 * m_N);
-        m_Luu = Eigen::MatrixXd::Zero(2 * m_M, 2 * m_M);
+        const size_t inducing_size = 3 * m_M;
+        m_inducing_point = Eigen::MatrixXd::Zero(inducing_size, m_D);
+        m_Kuf = Eigen::MatrixXd::Zero(inducing_size, 2 * m_N);
+        m_W = Eigen::MatrixXd::Zero(inducing_size, 2 * m_N);
+        m_Luu = Eigen::MatrixXd::Zero(inducing_size, inducing_size);
         m_diag = Eigen::MatrixXd::Zero(1, 2 * m_N);
         m_diag_inv = Eigen::MatrixXd::Zero(1, 2 * m_N);
         m_mu = Eigen::MatrixXd::Zero(2 * m_N, 1);
@@ -298,6 +299,23 @@ namespace GPRcpp
         m_L_updated = false;
     }
 
+    std::pair<double, double> VariationalGPR::check_new_inducing_var(const Eigen::MatrixXd & U_new)
+    {
+        if (U_new.rows() != 1)
+        {
+            throw std::runtime_error("check_new_inducing_var currently supports one candidate point at a time.");
+        }
+
+        // a = K(U, U_new), aa = K(U_new) + jitter, c = L_uu^{-1} a
+        Eigen::MatrixXd a = kernel_->evaluate(m_inducing_point.block(0, 0, m_M, m_D), U_new);
+        Eigen::MatrixXd aa = kernel_->evaluate(U_new) +
+                             Eigen::MatrixXd::Identity(U_new.rows(), U_new.rows()) * alpha_;
+        Eigen::MatrixXd c = m_Luu.block(0, 0, m_M, m_M).triangularView<Eigen::Lower>().solve(a);
+
+        const double var = aa(0, 0) - c.squaredNorm();
+        return std::make_pair(var, aa(0, 0));
+    }
+    
     void VariationalGPR::add_new_inducing_quick(const Eigen::MatrixXd & U_new)
     {
         size_t new_M = U_new.rows();

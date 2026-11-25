@@ -1,14 +1,12 @@
 #include <iostream>
+#include <chrono>
 #include <Eigen/Core>
 #include <Eigen/Dense>
-#include <vector>
+
 #include "gprs/sparse_gpr.h"
 #include "gprs/variational_gpr.h"
 #include "gprs/exact_gpr.h"
 #include "utils/file_operation.h"
-#include "gpr_math/distance.h"
-#include <chrono>
-#include <cmath>
 
 using namespace GPRcpp;
 
@@ -52,7 +50,7 @@ int main(int argc, char *argv[])
         std::cout << "You have select uncertainty propagation 20 times test!" << '\n';
         test_uncertainty_propagation_20_times();
     }
-	else if (atoi(argv[1]) == 4)
+    else if (atoi(argv[1]) == 4)
     {
         std::cout << "You have select py simulator test!" << '\n';
         int sparse_method = 0;
@@ -99,7 +97,7 @@ int main(int argc, char *argv[])
     }
     else if (atoi(argv[1]) == 9)
     {
-        std::cout << "You have select random test!" << '\n';
+        std::cout << "You have select gradient example test!" << '\n';
         show_gradient_examples(atoi(argv[2]));
     }
     else if (atoi(argv[1]) == 100)
@@ -140,6 +138,7 @@ void show_gradient_examples(int test_)
     Eigen::MatrixXd mu = Kbc.transpose() * W;
     Eigen::MatrixXd mu_taylor = Kbc0.transpose() * W + (C - C0) * dKbc_dx.transpose() * W;
 
+    std::cout << "[MPC Test] dKbc_dx:\n" << dKbc_dx << '\n';
     std::cout << "[MPC Test] mu:\n" << mu << '\n';
     std::cout << "[MPC Test] mu_taylor:\n" << mu_taylor << '\n';
 

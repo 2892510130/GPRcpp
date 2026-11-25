@@ -1,3 +1,4 @@
+#include <string>
 #include <Eigen/Core>
 
 namespace GPRcpp
